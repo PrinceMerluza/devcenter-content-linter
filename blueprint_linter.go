@@ -36,13 +36,3 @@ func exitGracefully(err error) {
 	fmt.Fprintf(os.Stderr, "error: %v\n", err)
 	os.Exit(1)
 }
-
-func main() {
-	paramsData, err := getParams()
-
-	if err != nil {
-		exitGracefully(err)
-	}
-
-	cloneBlueprint(paramsData.repoPath)
-}
