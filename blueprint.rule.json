@@ -8,35 +8,30 @@
                 "1": {
                     "description": "All Genesys Cloud blueprints must include a README.MD file.  This file should contain a brief introduction of the blueprint.",
                     "path": "./README.md",
-                    "type": "file",
                     "conditions": [{ "pathExists": true }],
                     "level": "error"
                 },
                 "2": {
                     "description": "Every Genesys Cloud blueprint should have a blueprint directory at the root of the project.  This directory should hold all assets associated with the blueprint.",
                     "path": "./blueprint",
-                    "type": "directory",
                     "conditions": [{ "pathExists": true }],
                     "level": "error"
                 },
                 "3": {
                     "description": "Every Genesys Cloud blueprint should have a blueprint/images directory that will contain all of the image assets for a project.",
                     "path": "./blueprint/images",
-                    "type": "directory",
                     "conditions": [{ "pathExists": true }],
                     "level": "error"
                 },
                 "4": {
                     "description": "Every Genesys Cloud blueprint should have a blueprint/images directory that will contain all of the image assets for a project.",
                     "path": "./blueprint/images",
-                    "type": "directory",
                     "conditions": [{ "pathExists": true }],
                     "level": "error"
                 },
                 "5": {
                     "description": "Every Genesys Cloud blueprint should have a blueprint/index.md that contains a complete writeup in Markdown of the blueprint.",
                     "path": "./blueprint/index.md",
-                    "type": "file",
                     "conditions": [{ "pathExists": true }],
                     "level": "error"
                 }
@@ -60,7 +55,7 @@
                     "description": "  The front matter must be defined in the file or the blueprint will not appear in the Developer Center.",
                     "path": "./README.md",
                     "conditions": [{
-                        "markdownMeta": [{
+                        "markdownMeta": {
                             "title": ".*",
                             "author": ".*",
                             "indextype": "blueprint",
@@ -68,7 +63,7 @@
                             "image": ".*",
                             "category": ".*",
                             "summary": ".*"
-                        }]
+                        }
                     }],
                     "level": "error"
                 },

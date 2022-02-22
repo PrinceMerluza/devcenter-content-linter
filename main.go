@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"sync"
 )
 
 var logger = log.New(os.Stdout, "", 0)
@@ -25,25 +26,38 @@ func getParams() (paramBlueprint, error) {
 	return paramBlueprint{repoPath, rulePath}, nil
 }
 
-func evaluateContent(paramsData *paramBlueprint) (err error) {
+func prepareFiles(paramsData *paramBlueprint) (r *EvaluationData, errors []error) {
+	var wg sync.WaitGroup
+	r = &EvaluationData{}
+
 	// Create temporary directory for blueprints
 	tempDir, err := ioutil.TempDir(".", ".tmp-content-*")
 	if err != nil {
-		return err
+		return r, errors
 	}
 	defer os.RemoveAll(tempDir)
 
-	// Clone blueprint
-	if _, err = cloneBlueprint(tempDir, paramsData.repoPath); err != nil {
-		return err
-	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
 
-	// Load the configuration file
-	if err = loadRuleConfig(paramsData.rulePath); err != nil {
-		return err
-	}
+		if r.ContentPath, err = cloneBlueprint(tempDir, paramsData.repoPath); err != nil {
+			errors = append(errors, err)
+		}
+	}()
 
-	return nil
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		if r.RuleData, err = loadRuleConfig(paramsData.rulePath); err != nil {
+			errors = append(errors, err)
+		}
+	}()
+
+	wg.Wait()
+
+	return r, errors
 }
 
 func main() {
@@ -54,8 +68,12 @@ func main() {
 	}
 
 	// Evaluate the content against the rule
-	if err = evaluateContent(&paramsData); err != nil {
-		log.Fatal(err)
+	_, errs := prepareFiles(&paramsData)
+	for _, err := range errs {
+		log.Print(err.Error())
+	}
+	if len(errs) > 0 {
+		log.Fatal("Error when preparing necessary files")
 	}
 
 	logger.Println("Success")

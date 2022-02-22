@@ -48,10 +48,6 @@
                                                 "type": "string"
                                             }
                                         },
-                                        "type": {
-                                            "description": "Describes the path. Valid values: ['file', 'directory']",
-                                            "enum": ["file", "directory"]
-                                        },
                                         "conditions": {
                                             "description": "Array of conditions to evaluate against. All conditions must pass for the rule to pass.",
                                             "type": "array",
@@ -90,18 +86,13 @@
                                                     },
                                                     "markdownMeta": {
                                                         "description": "Evaluates the frontmatter values in markdown files. Array of objects where the key is the metadata property and the value is regex.",
-                                                        "type": "array",
-                                                        "items": {
-                                                            "type": "object",
-                                                            "patternProperties": {
-                                                                ".*": {
-                                                                    "description": "Regex value for this front matter property",
-                                                                    "type": "string"
-                                                                }
-                                                            },
-                                                            "additionalProperties": false
-                                                        },
-                                                        "minItems": 1
+                                                        "type": "object",
+                                                        "patternProperties": {
+                                                            ".*": {
+                                                                "description": "Regex value for this front matter property",
+                                                                "type": "string"
+                                                            }
+                                                        }
                                                     },
                                                     "checkReferenceExist": {
                                                         "description": "Checks if the path(file/folder) exists in the blueprints",
