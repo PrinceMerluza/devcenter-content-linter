@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -67,13 +68,19 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Evaluate the content against the rule
-	_, errs := prepareFiles(&paramsData)
+	// Clone blueprint and load rule config
+	data, errs := prepareFiles(&paramsData)
 	for _, err := range errs {
 		log.Print(err.Error())
 	}
 	if len(errs) > 0 {
 		log.Fatal("Error when preparing necessary files")
+	}
+
+	// Evaluate the content
+	finalResult := data.evaluate()
+	for _, result := range finalResult.results {
+		fmt.Println(result.Id)
 	}
 
 	logger.Println("Success")

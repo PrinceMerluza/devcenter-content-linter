@@ -1,23 +1,16 @@
 package main
 
 import (
-	"context"
-	"encoding/json"
-	"errors"
-	"log"
-	"os"
-	"os/exec"
-	"path/filepath"
-
-	"github.com/qri-io/jsonschema"
+	"fmt"
+	"sync"
 )
 
 type RuleLevel string
 
 const (
 	Undefined RuleLevel = ""
-	Warning             = "warning"
-	Error               = "error"
+	Warning   RuleLevel = "warning"
+	Error     RuleLevel = "error"
 )
 
 type EvaluationData struct {
@@ -41,7 +34,7 @@ type RuleGroup struct {
 type Rule struct {
 	Description string
 	Path        *string
-	Files       []string
+	Files       *[]string
 	Conditions  *[]Condition
 	Level       RuleLevel
 }
@@ -64,76 +57,63 @@ type CheckReferenceExistCondition struct {
 	MatchGroup int
 }
 
-func cloneBlueprint(tmpDirectory string, url string) (dirPath string, err error) {
-	logger.Print("Cloning blueprint...")
-
-	// Clone the blueprint into the temporary directory
-	_, err = exec.Command("git", "-C", tmpDirectory, "clone", url).Output()
-	if err != nil {
-		return
-	}
-
-	files, err := os.ReadDir(tmpDirectory)
-	if err != nil {
-		return
-	}
-
-	if len(files) < 1 {
-		err = errors.New("can't find cloned repo directory")
-		return
-	}
-
-	logger.Println("Successfully cloned blueprint")
-	dirPath = filepath.Join(tmpDirectory, files[0].Name())
-
-	return
+type EvaluationResult struct {
+	results []*RuleResult
 }
 
-func loadRuleConfig(filePath string) (retData *RuleData, err error) {
-	ctx := context.Background()
-	rs := &jsonschema.Schema{}
-	retData = &RuleData{}
-
-	logger.Print("Processing rule configuration...")
-
-	// Load schema file
-	schemaData, err := os.ReadFile("./schemas/linter-rules.schema.json")
-	if err != nil {
-		return
-	}
-
-	if err = json.Unmarshal(schemaData, rs); err != nil {
-		return
-	}
-
-	// Load the rule config file
-	rawRules, err := os.ReadFile(filePath)
-	if err != nil {
-		return
-	}
-
-	// Verify if rule config file follows schema
-	errs, err := rs.ValidateBytes(ctx, rawRules)
-	if err != nil {
-		return
-	}
-	for _, err = range errs {
-		log.Print(err.Error())
-	}
-	if len(errs) > 0 {
-		err = errors.New("rule file syntax is invalid")
-		return
-	}
-
-	// Marshall the rule json file
-	if err = json.Unmarshal(rawRules, retData); err != nil {
-		return
-	}
-
-	logger.Print("Successfully processed rule configuration")
-	return
+type RuleResult struct {
+	Id        string
+	Rule      *Rule
+	isSuccess bool
 }
 
-func evaluateContent(input *EvaluationData) {
+func (input *EvaluationData) evaluate() *EvaluationResult {
+	var wg sync.WaitGroup
+	contentPath := input.ContentPath
+	ruleData := input.RuleData
+	finalResult := &EvaluationResult{}
 
+	for id, ruleGroup := range *ruleData.RuleGroups {
+		idCpy := id
+		ruleGroupCpy := ruleGroup
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			finalResult.results = append(finalResult.results, ruleGroupCpy.evaluate(idCpy, contentPath)...)
+		}()
+	}
+
+	wg.Wait()
+
+	return finalResult
+}
+
+func (ruleGroup *RuleGroup) evaluate(groupId string, path string) []*RuleResult {
+	var wg sync.WaitGroup
+	results := []*RuleResult{}
+
+	for id, rule := range *ruleGroup.Rules {
+		ruleIdFull := fmt.Sprintf("%s_%s", groupId, id)
+		ruleCpy := rule
+
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			results = append(results, ruleCpy.evaluate(ruleIdFull, path))
+		}()
+	}
+
+	wg.Wait()
+	return results
+}
+
+func (rule *Rule) evaluate(ruleId string, path string) *RuleResult {
+	ret := &RuleResult{
+		Id: ruleId,
+	}
+
+	return ret
 }
