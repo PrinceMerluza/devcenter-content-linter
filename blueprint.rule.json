@@ -73,7 +73,7 @@
                     "conditions": [{
                         "contains": [{
                             "type": "regex",
-                            "value": "^## *Scenario *$"
+                            "value": "## *Scenario *"
                         }]
                     }],
                     "level": "error"
@@ -84,7 +84,7 @@
                     "conditions": [{
                         "contains": [{
                             "type": "regex",
-                            "value": "^## *Solution *$"
+                            "value": "## *Solution *"
                         }]
                     }],
                     "level": "error"
@@ -95,7 +95,7 @@
                     "conditions": [{
                         "contains": [{
                             "type": "regex",
-                            "value": "^## *Content *$"
+                            "value": "## *Content *"
                         }]
                     }],
                     "level": "error"
@@ -106,7 +106,7 @@
                     "conditions": [{
                         "contains": [{
                             "type": "regex",
-                            "value": "^## *Prerequisites *$"
+                            "value": "## *Prerequisites *"
                         }]
                     }],
                     "level": "error"
@@ -117,7 +117,7 @@
                     "conditions": [{
                         "contains": [{
                             "type": "regex",
-                            "value": "^### *Specialized knowledge *$"
+                            "value": "### *Specialized knowledge *"
                         }]
                     }],
                     "level": "error"
@@ -128,7 +128,7 @@
                     "conditions": [{
                         "contains": [{
                             "type": "regex",
-                            "value": "^## *Implementation steps *$"
+                            "value": "## *Implementation steps *"
                         }]
                     }],
                     "level": "error"
@@ -139,7 +139,7 @@
                     "conditions": [{
                         "contains": [{
                             "type": "regex",
-                            "value": "^### *Download the repository containing the project files *$"
+                            "value": "### *Download the repository containing the project files *"
                         }]
                     }],
                     "level": "error"
@@ -150,7 +150,7 @@
                     "conditions": [{
                         "contains": [{
                             "type": "regex",
-                            "value": "^## *Additional resources *$"
+                            "value": "## *Additional resources *"
                         }]
                     }],
                     "level": "error"

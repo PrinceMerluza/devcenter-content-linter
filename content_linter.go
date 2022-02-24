@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"regexp"
+	"strings"
 )
 
 type RuleLevel string
@@ -157,10 +159,10 @@ func (rule *Rule) Evaluate(ruleId string, contentPath string) *RuleResult {
 	// Short circuited evaluation for conditions
 	for _, condition := range *rule.Conditions {
 		condResult := condition.Evaluate(rule, contentPath)
-		if condResult == nil || condResult.IsSuccess == nil {
+		if condResult == nil {
 			ret.Error = &EvaluationError{
 				RuleId: ruleId,
-				Err:    errors.New("unexpected error. Success status not able to be determined"),
+				Err:    errors.New("unexpected error. No result from condition"),
 			}
 			break
 		}
@@ -169,6 +171,13 @@ func (rule *Rule) Evaluate(ruleId string, contentPath string) *RuleResult {
 			ret.Error = &EvaluationError{
 				RuleId: ruleId,
 				Err:    condResult.Error,
+			}
+			break
+		}
+		if condResult.IsSuccess == nil {
+			ret.Error = &EvaluationError{
+				RuleId: ruleId,
+				Err:    errors.New("unexpected error. Success status not able to be determined"),
 			}
 			break
 		}
@@ -202,18 +211,18 @@ func (condition *Condition) Evaluate(rule *Rule, contentPath string) *ConditionR
 	// PathExists Condition
 	if condition.PathExists != nil && *condition.PathExists {
 		ret = EvaluatePathExistCondition(&filePaths)
-		if !*ret.IsSuccess {
+		if ret.IsSuccess != nil && !*ret.IsSuccess {
 			return ret
 		}
 	}
 
 	// Contains Conditions
-	// if condition.Contains != nil {
-	// 	ret = EvaluateContainsCondition(&filePaths, condition.Contains)
-	// 	if !*ret.IsSuccess {
-	// 		return ret
-	// 	}
-	// }
+	if condition.Contains != nil {
+		ret = EvaluateContainsCondition(&filePaths, condition.Contains)
+		if ret.IsSuccess != nil && !*ret.IsSuccess {
+			return ret
+		}
+	}
 
 	return ret
 }
@@ -233,15 +242,35 @@ func EvaluatePathExistCondition(filePaths *[]string) *ConditionResult {
 	return ret
 }
 
-// func EvaluateContainsCondition(filePaths *[]string, arrContains *[]ContainsCondition) *ConditionResult {
-// 	ret := &ConditionResult{}
-// 	tmpSuccess := true
+func EvaluateContainsCondition(filePaths *[]string, arrContains *[]ContainsCondition) *ConditionResult {
+	ret := &ConditionResult{}
 
-// 	for _, path := range *filePaths {
+	for _, path := range *filePaths {
+		for _, contains := range *arrContains {
+			fileData, err := os.ReadFile(path)
+			if err != nil {
+				ret.Error = err
+				return ret
+			}
 
-// 		tmpSuccess = true
-// 	}
-// 	ret.IsSuccess = &tmpSuccess
+			dataString := string(fileData[:])
 
-// 	return ret
-// }
+			switch contains.Type {
+			case "static":
+				ret.IsSuccess = NewBoolPtr(strings.Contains(dataString, contains.Value))
+			case "regex":
+				matched, err := regexp.MatchString(contains.Value, dataString)
+				if err != nil {
+					ret.Error = err
+					return ret
+				}
+				ret.IsSuccess = NewBoolPtr(matched)
+			default:
+				ret.Error = errors.New("unknown contains type")
+				return ret
+			}
+		}
+	}
+
+	return ret
+}

@@ -85,7 +85,7 @@ func main() {
 
 	for _, result := range finalResult.results {
 		if result.Error != nil || result.IsSuccess == nil {
-			fmt.Printf(`Error on running test %s
+			fmt.Printf(`%s
 				Error: %v
 			`, result.Id, result.Error)
 			continue
