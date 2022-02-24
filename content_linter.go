@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path"
 )
 
 type RuleLevel string
@@ -48,7 +50,7 @@ type Condition struct {
 }
 
 type ContainsCondition struct {
-	Type  string
+	Type  string // static or regex
 	Value string
 }
 
@@ -64,9 +66,15 @@ type EvaluationResult struct {
 type RuleResult struct {
 	Id            string
 	Rule          *Rule
-	IsSuccess     bool
+	IsSuccess     *bool
 	FileHighlight *FileHighlight
 	Error         *EvaluationError
+}
+
+type ConditionResult struct {
+	IsSuccess     *bool
+	FileHighlight *FileHighlight
+	Error         error
 }
 
 type FileHighlight struct {
@@ -140,10 +148,100 @@ func (ruleGroup *RuleGroup) Evaluate(ch chan *RuleResult, groupId string, path s
 
 // Evaluate the specific rule and get the RuleResult. Path is the root of
 // content files
-func (rule *Rule) Evaluate(ruleId string, path string) *RuleResult {
+func (rule *Rule) Evaluate(ruleId string, contentPath string) *RuleResult {
 	ret := &RuleResult{
-		Id: ruleId,
+		Id:   ruleId,
+		Rule: rule,
+	}
+
+	// Short circuited evaluation for conditions
+	for _, condition := range *rule.Conditions {
+		condResult := condition.Evaluate(rule, contentPath)
+		if condResult == nil || condResult.IsSuccess == nil {
+			ret.Error = &EvaluationError{
+				RuleId: ruleId,
+				Err:    errors.New("unexpected error. Success status not able to be determined"),
+			}
+			break
+		}
+		if condResult.Error != nil {
+			ret.IsSuccess = NewBoolPtr(false)
+			ret.Error = &EvaluationError{
+				RuleId: ruleId,
+				Err:    condResult.Error,
+			}
+			break
+		}
+
+		ret.IsSuccess = condResult.IsSuccess
+		ret.FileHighlight = condResult.FileHighlight
 	}
 
 	return ret
 }
+
+// Evaluate the condition. Any failure in any type of condition will short circuit the evaluation.
+func (condition *Condition) Evaluate(rule *Rule, contentPath string) *ConditionResult {
+	var ret *ConditionResult
+
+	filePaths := []string{}
+
+	// Determine the relative filepaths
+	if rule.Path == nil && rule.Files == nil {
+		ret.Error = errors.New("rules has no path or files in it")
+	}
+	if rule.Files != nil {
+		for _, file := range *rule.Files {
+			filePaths = append(filePaths, path.Join(contentPath, file))
+		}
+	}
+	if rule.Path != nil {
+		filePaths = append(filePaths, path.Join(contentPath, *rule.Path))
+	}
+
+	// PathExists Condition
+	if condition.PathExists != nil && *condition.PathExists {
+		ret = EvaluatePathExistCondition(&filePaths)
+		if !*ret.IsSuccess {
+			return ret
+		}
+	}
+
+	// Contains Conditions
+	// if condition.Contains != nil {
+	// 	ret = EvaluateContainsCondition(&filePaths, condition.Contains)
+	// 	if !*ret.IsSuccess {
+	// 		return ret
+	// 	}
+	// }
+
+	return ret
+}
+
+func EvaluatePathExistCondition(filePaths *[]string) *ConditionResult {
+	ret := &ConditionResult{}
+
+	for _, path := range *filePaths {
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			ret.IsSuccess = NewBoolPtr(false)
+			break
+		}
+
+		ret.IsSuccess = NewBoolPtr(true)
+	}
+
+	return ret
+}
+
+// func EvaluateContainsCondition(filePaths *[]string, arrContains *[]ContainsCondition) *ConditionResult {
+// 	ret := &ConditionResult{}
+// 	tmpSuccess := true
+
+// 	for _, path := range *filePaths {
+
+// 		tmpSuccess = true
+// 	}
+// 	ret.IsSuccess = &tmpSuccess
+
+// 	return ret
+// }

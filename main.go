@@ -27,18 +27,12 @@ func getParams() (paramBlueprint, error) {
 	return paramBlueprint{repoPath, rulePath}, nil
 }
 
-func prepareFiles(paramsData *paramBlueprint) (r *EvaluationData, errors []error) {
+func prepareFiles(paramsData *paramBlueprint, tempDir string) (r *EvaluationData, errors []error) {
 	var wg sync.WaitGroup
+	var err error
 	r = &EvaluationData{}
 
-	// Create temporary directory for blueprints
-	tempDir, err := ioutil.TempDir(".", ".tmp-content-*")
-	if err != nil {
-		return r, errors
-	}
-	defer os.RemoveAll(tempDir)
-
-	wg.Add(1)
+	wg.Add(2)
 	go func() {
 		defer wg.Done()
 
@@ -47,7 +41,6 @@ func prepareFiles(paramsData *paramBlueprint) (r *EvaluationData, errors []error
 		}
 	}()
 
-	wg.Add(1)
 	go func() {
 		defer wg.Done()
 
@@ -68,8 +61,15 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Create temporary directory for blueprints
+	tempDir, err := ioutil.TempDir(".", ".tmp-content-*")
+	if err != nil {
+		log.Fatal("Can't create temporary directory")
+	}
+	defer os.RemoveAll(tempDir)
+
 	// Clone blueprint and load rule config
-	data, errs := prepareFiles(&paramsData)
+	data, errs := prepareFiles(&paramsData, tempDir)
 	for _, err := range errs {
 		log.Print(err.Error())
 	}
@@ -84,8 +84,19 @@ func main() {
 	}
 
 	for _, result := range finalResult.results {
-		fmt.Println(result.Id)
+		if result.Error != nil || result.IsSuccess == nil {
+			fmt.Printf(`Error on running test %s
+				Error: %v
+			`, result.Id, result.Error)
+			continue
+		}
+
+		fmt.Printf(`%s
+			Level: %s
+			Description: %s
+			Success: %v
+		`, result.Id, result.Rule.Level, result.Rule.Description, *result.IsSuccess)
 	}
 
-	logger.Println("Success")
+	logger.Println("END")
 }
