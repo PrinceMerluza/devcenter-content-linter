@@ -78,7 +78,11 @@ func main() {
 	}
 
 	// Evaluate the content
-	finalResult := data.evaluate()
+	finalResult, err := data.Evaluate()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
 	for _, result := range finalResult.results {
 		fmt.Println(result.Id)
 	}

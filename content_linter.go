@@ -1,8 +1,8 @@
 package main
 
 import (
+	"errors"
 	"fmt"
-	"sync"
 )
 
 type RuleLevel string
@@ -62,55 +62,85 @@ type EvaluationResult struct {
 }
 
 type RuleResult struct {
-	Id        string
-	Rule      *Rule
-	isSuccess bool
+	Id            string
+	Rule          *Rule
+	IsSuccess     bool
+	FileHighlight *FileHighlight
+	Error         *EvaluationError
 }
 
-func (input *EvaluationData) evaluate() *EvaluationResult {
-	var wg sync.WaitGroup
+type FileHighlight struct {
+	Path      string
+	LineStart int
+	LineEnd   int
+}
+
+type EvaluationError struct {
+	RuleId string
+	Err    error
+}
+
+func (e *EvaluationError) Error() string {
+	return fmt.Sprintf("error on rule %s: %v", e.RuleId, e.Err)
+}
+
+// Evaluate the content
+func (input *EvaluationData) Evaluate() (*EvaluationResult, error) {
+	if input == nil {
+		return nil, errors.New("nil evaluation Data")
+	}
+
+	rulesCount := 0
 	contentPath := input.ContentPath
 	ruleData := input.RuleData
 	finalResult := &EvaluationResult{}
+	ch := make(chan *RuleResult)
 
 	for id, ruleGroup := range *ruleData.RuleGroups {
-		idCpy := id
-		ruleGroupCpy := ruleGroup
-
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-
-			finalResult.results = append(finalResult.results, ruleGroupCpy.evaluate(idCpy, contentPath)...)
-		}()
+		rulesCount += len(*ruleGroup.Rules)
+		if err := ruleGroup.Evaluate(ch, id, contentPath); err != nil {
+			return finalResult, err
+		}
 	}
 
-	wg.Wait()
+	for i := 0; i < rulesCount; i++ {
+		ruleResult := <-ch
+		finalResult.results = append(finalResult.results, ruleResult)
+	}
 
-	return finalResult
+	return finalResult, nil
 }
 
-func (ruleGroup *RuleGroup) evaluate(groupId string, path string) []*RuleResult {
-	var wg sync.WaitGroup
-	results := []*RuleResult{}
+// Evaluate the rulegroup. Channel should be passed where the RuleResults will
+// be sent to.
+func (ruleGroup *RuleGroup) Evaluate(ch chan *RuleResult, groupId string, path string) error {
+	if ch == nil {
+		return fmt.Errorf("%s: channel is missing", groupId)
+	}
+
+	if len(groupId) <= 0 {
+		return fmt.Errorf("%s: group id is blank", groupId)
+	}
+
+	if len(path) <= 0 {
+		return fmt.Errorf("%s: path is blank", groupId)
+	}
 
 	for id, rule := range *ruleGroup.Rules {
 		ruleIdFull := fmt.Sprintf("%s_%s", groupId, id)
 		ruleCpy := rule
 
-		wg.Add(1)
 		go func() {
-			defer wg.Done()
-
-			results = append(results, ruleCpy.evaluate(ruleIdFull, path))
+			ch <- ruleCpy.Evaluate(ruleIdFull, path)
 		}()
 	}
 
-	wg.Wait()
-	return results
+	return nil
 }
 
-func (rule *Rule) evaluate(ruleId string, path string) *RuleResult {
+// Evaluate the specific rule and get the RuleResult. Path is the root of
+// content files
+func (rule *Rule) Evaluate(ruleId string, path string) *RuleResult {
 	ret := &RuleResult{
 		Id: ruleId,
 	}
