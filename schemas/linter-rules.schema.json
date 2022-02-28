@@ -84,16 +84,6 @@
                                                             "type": "string"
                                                         }
                                                     },
-                                                    "markdownMeta": {
-                                                        "description": "Evaluates the frontmatter values in markdown files. Array of objects where the key is the metadata property and the value is regex.",
-                                                        "type": "object",
-                                                        "patternProperties": {
-                                                            ".*": {
-                                                                "description": "Regex value for this front matter property",
-                                                                "type": "string"
-                                                            }
-                                                        }
-                                                    },
                                                     "checkReferenceExist": {
                                                         "description": "Checks if the path(file/folder) exists in the blueprints",
                                                         "type": "array",

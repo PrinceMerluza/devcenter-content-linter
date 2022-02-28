@@ -49,7 +49,6 @@ type Condition struct {
 	PathExists          *bool
 	Contains            *[]ContainsCondition
 	NotContains         *[]string
-	MarkdownMeta        *map[string]string
 	CheckReferenceExist *[]string
 }
 
@@ -270,19 +269,27 @@ func EvaluateContainsCondition(filePaths *[]string, arrContains *[]ContainsCondi
 		for _, contains := range *arrContains {
 			switch contains.Type {
 			case "static":
-				ret.IsSuccess = NewBoolPtr(strings.Contains(dataString, contains.Value))
+				if !strings.Contains(dataString, contains.Value) {
+					ret.IsSuccess = NewBoolPtr(false)
+				}
 			case "regex":
 				matched, err := regexp.MatchString(contains.Value, dataString)
 				if err != nil {
 					ret.Error = err
 					return ret
 				}
-				ret.IsSuccess = NewBoolPtr(matched)
+				if !matched {
+					ret.IsSuccess = NewBoolPtr(false)
+				}
 			default:
 				ret.Error = errors.New("unknown contains type")
 				return ret
 			}
 		}
+	}
+
+	if ret.IsSuccess == nil {
+		ret.IsSuccess = NewBoolPtr(true)
 	}
 
 	return ret
