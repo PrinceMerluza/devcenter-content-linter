@@ -224,6 +224,14 @@ func (condition *Condition) Evaluate(rule *Rule, contentPath string) *ConditionR
 		}
 	}
 
+	// Not Contains Condition
+	if condition.NotContains != nil {
+		ret = EvaluateNotContainsCondition(&filePaths, condition.NotContains)
+		if ret.IsSuccess != nil && !*ret.IsSuccess {
+			return ret
+		}
+	}
+
 	return ret
 }
 
@@ -269,6 +277,31 @@ func EvaluateContainsCondition(filePaths *[]string, arrContains *[]ContainsCondi
 				ret.Error = errors.New("unknown contains type")
 				return ret
 			}
+		}
+	}
+
+	return ret
+}
+
+func EvaluateNotContainsCondition(filePaths *[]string, notContains *[]string) *ConditionResult {
+	ret := &ConditionResult{}
+
+	for _, path := range *filePaths {
+		for _, contains := range *notContains {
+			fileData, err := os.ReadFile(path)
+			if err != nil {
+				ret.Error = err
+				return ret
+			}
+
+			dataString := string(fileData[:])
+
+			matched, err := regexp.MatchString(contains, dataString)
+			if err != nil {
+				ret.Error = err
+				return ret
+			}
+			ret.IsSuccess = NewBoolPtr(!matched)
 		}
 	}
 

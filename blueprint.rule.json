@@ -51,6 +51,17 @@
                     }],
                     "level": "error"
                 },
+                "2": {
+                    "description": "The front matter must be defined in the file or the blueprint will not appear in the Developer Center",
+                    "path": "./blueprint/index.md",
+                    "conditions": [{
+                        "contains": [{
+                            "type": "regex",
+                            "value": "^---\\r*\\n*.*\\r*\n*---"
+                        }]
+                    }],
+                    "level": "error"
+                },
                 "3": {
                     "description": "  The front matter must be defined in the file or the blueprint will not appear in the Developer Center.",
                     "path": "./README.md",
