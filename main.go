@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"sort"
 	"sync"
 )
 
@@ -54,17 +55,18 @@ func prepareFiles(paramsData *paramBlueprint, tempDir string) (r *EvaluationData
 	return r, errors
 }
 
-func main() {
+func evaluate() error {
 	// Get CLI parameter values
 	paramsData, err := getParams()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	// Create temporary directory for blueprints
 	tempDir, err := ioutil.TempDir(".", ".tmp-content-*")
 	if err != nil {
-		log.Fatal("Can't create temporary directory")
+		log.Print("Can't create temporary directory")
+		return err
 	}
 	defer os.RemoveAll(tempDir)
 
@@ -74,29 +76,42 @@ func main() {
 		log.Print(err.Error())
 	}
 	if len(errs) > 0 {
-		log.Fatal("Error when preparing necessary files")
+		return errors.New("Error when preparing necessary files")
 	}
 
 	// Evaluate the content
 	finalResult, err := data.Evaluate()
 	if err != nil {
-		log.Fatal(err.Error())
+		return err
 	}
 
+	sort.SliceStable(finalResult.results, func(i, j int) bool {
+		return finalResult.results[i].Id < finalResult.results[j].Id
+	})
+
 	for _, result := range finalResult.results {
+		fmt.Printf("\n-----\n")
+
 		if result.Error != nil || result.IsSuccess == nil {
-			fmt.Printf(`%s
-				Error: %v
-			`, result.Id, result.Error)
+			fmt.Printf("%s \n Error: %v \n", result.Id, result.Error)
 			continue
 		}
 
-		fmt.Printf(`%s
-			Level: %s
-			Description: %s
-			Success: %v
-		`, result.Id, result.Rule.Level, result.Rule.Description, *result.IsSuccess)
+		fmt.Printf("%s \nLevel: %s \nDescription: %s \nSuccess: %v",
+			result.Id, result.Rule.Level, result.Rule.Description, *result.IsSuccess)
+
+		if result.FileHighlights != nil {
+			for _, fileHighlight := range result.FileHighlights {
+				fmt.Printf("\nFile: %v \nLine #%v \n%v", fileHighlight.Path, fileHighlight.LineNumber, fileHighlight.LineContent)
+			}
+		}
 	}
 
-	logger.Println("END")
+	return err
+}
+
+func main() {
+	if err := evaluate(); err != nil {
+		log.Fatal(err)
+	}
 }

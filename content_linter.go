@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"path"
 	"regexp"
@@ -66,23 +68,23 @@ type EvaluationResult struct {
 }
 
 type RuleResult struct {
-	Id            string
-	Rule          *Rule
-	IsSuccess     *bool
-	FileHighlight *FileHighlight
-	Error         *EvaluationError
+	Id             string
+	Rule           *Rule
+	IsSuccess      *bool
+	FileHighlights []*FileHighlight
+	Error          *EvaluationError
 }
 
 type ConditionResult struct {
-	IsSuccess     *bool
-	FileHighlight *FileHighlight
-	Error         error
+	IsSuccess      *bool
+	FileHighlights []*FileHighlight
+	Error          error
 }
 
 type FileHighlight struct {
-	Path      string
-	LineStart int
-	LineEnd   int
+	Path        string
+	LineNumber  int
+	LineContent string
 }
 
 type EvaluationError struct {
@@ -183,7 +185,7 @@ func (rule *Rule) Evaluate(ruleId string, contentPath string) *RuleResult {
 		}
 
 		ret.IsSuccess = condResult.IsSuccess
-		ret.FileHighlight = condResult.FileHighlight
+		ret.FileHighlights = condResult.FileHighlights
 	}
 
 	return ret
@@ -288,20 +290,37 @@ func EvaluateNotContainsCondition(filePaths *[]string, notContains *[]string) *C
 
 	for _, path := range *filePaths {
 		for _, contains := range *notContains {
-			fileData, err := os.ReadFile(path)
+			file, err := os.Open(path)
 			if err != nil {
 				ret.Error = err
-				return ret
+			}
+			defer file.Close()
+
+			scanner := bufio.NewScanner(file)
+			lineNumber := 0
+			for scanner.Scan() {
+				lineNumber++
+				lineString := scanner.Text()
+
+				matched, err := regexp.MatchString(contains, lineString)
+				if err != nil {
+					ret.Error = err
+					return ret
+				}
+
+				if matched {
+					ret.IsSuccess = NewBoolPtr(false)
+					ret.FileHighlights = append(ret.FileHighlights, &FileHighlight{
+						Path:        path,
+						LineNumber:  lineNumber,
+						LineContent: lineString,
+					})
+				}
 			}
 
-			dataString := string(fileData[:])
-
-			matched, err := regexp.MatchString(contains, dataString)
-			if err != nil {
-				ret.Error = err
-				return ret
+			if err := scanner.Err(); err != nil {
+				log.Fatal(err)
 			}
-			ret.IsSuccess = NewBoolPtr(!matched)
 		}
 	}
 
