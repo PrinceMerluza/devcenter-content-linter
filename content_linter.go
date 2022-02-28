@@ -50,17 +50,12 @@ type Condition struct {
 	Contains            *[]ContainsCondition
 	NotContains         *[]string
 	MarkdownMeta        *map[string]string
-	CheckReferenceExist *CheckReferenceExistCondition
+	CheckReferenceExist *[]string
 }
 
 type ContainsCondition struct {
 	Type  string // static or regex
 	Value string
-}
-
-type CheckReferenceExistCondition struct {
-	Pattern    string
-	MatchGroup int
 }
 
 type EvaluationResult struct {
@@ -234,6 +229,14 @@ func (condition *Condition) Evaluate(rule *Rule, contentPath string) *ConditionR
 		}
 	}
 
+	// Check reference Exist Condition
+	if condition.CheckReferenceExist != nil {
+		ret = EvaluateCheckReferenceExistCondition(&filePaths, condition.CheckReferenceExist)
+		if ret.IsSuccess != nil && !*ret.IsSuccess {
+			return ret
+		}
+	}
+
 	return ret
 }
 
@@ -256,15 +259,15 @@ func EvaluateContainsCondition(filePaths *[]string, arrContains *[]ContainsCondi
 	ret := &ConditionResult{}
 
 	for _, path := range *filePaths {
+		fileData, err := os.ReadFile(path)
+		if err != nil {
+			ret.Error = err
+			return ret
+		}
+
+		dataString := string(fileData[:])
+
 		for _, contains := range *arrContains {
-			fileData, err := os.ReadFile(path)
-			if err != nil {
-				ret.Error = err
-				return ret
-			}
-
-			dataString := string(fileData[:])
-
 			switch contains.Type {
 			case "static":
 				ret.IsSuccess = NewBoolPtr(strings.Contains(dataString, contains.Value))
@@ -289,13 +292,13 @@ func EvaluateNotContainsCondition(filePaths *[]string, notContains *[]string) *C
 	ret := &ConditionResult{}
 
 	for _, path := range *filePaths {
-		for _, contains := range *notContains {
-			file, err := os.Open(path)
-			if err != nil {
-				ret.Error = err
-			}
-			defer file.Close()
+		file, err := os.Open(path)
+		if err != nil {
+			ret.Error = err
+		}
+		defer file.Close()
 
+		for _, contains := range *notContains {
 			scanner := bufio.NewScanner(file)
 			lineNumber := 0
 			for scanner.Scan() {
@@ -322,6 +325,65 @@ func EvaluateNotContainsCondition(filePaths *[]string, notContains *[]string) *C
 				log.Fatal(err)
 			}
 		}
+	}
+
+	if ret.IsSuccess == nil {
+		ret.IsSuccess = NewBoolPtr(true)
+	}
+
+	return ret
+}
+
+func EvaluateCheckReferenceExistCondition(filePaths *[]string, referencePatterns *[]string) *ConditionResult {
+	ret := &ConditionResult{}
+
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered in f", r)
+		}
+	}()
+
+	for _, path := range *filePaths {
+		file, err := os.Open(path)
+		if err != nil {
+			ret.Error = err
+		}
+		defer file.Close()
+
+		for _, pattern := range *referencePatterns {
+			re := regexp.MustCompile(pattern)
+
+			scanner := bufio.NewScanner(file)
+			lineNumber := 0
+			for scanner.Scan() {
+				lineNumber++
+				lineString := scanner.Text()
+
+				subMatch := re.FindSubmatch([]byte(lineString))
+				if subMatch == nil {
+					continue
+				}
+
+				pathToCheck := string(subMatch[1])
+
+				if _, err := os.Stat(pathToCheck); os.IsNotExist(err) {
+					ret.IsSuccess = NewBoolPtr(false)
+					ret.FileHighlights = append(ret.FileHighlights, &FileHighlight{
+						Path:        path,
+						LineNumber:  lineNumber,
+						LineContent: lineString,
+					})
+				}
+			}
+
+			if err := scanner.Err(); err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
+
+	if ret.IsSuccess == nil {
+		ret.IsSuccess = NewBoolPtr(true)
 	}
 
 	return ret

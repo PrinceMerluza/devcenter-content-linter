@@ -1,154 +1,205 @@
 package main
 
 const RuleSetSchema = `{
-    "$schema": "https://json-schema.org/draft-07/schema#",
-    "title": "Linter Rules",
-    "description": "Rules for validating Genesys Cloud Developer Center content.",
-    "type": "object",
-    "properties": {
-        "name": {
-            "description": "Name of the rule configuration",
-            "type": "string"
-        },
-        "description": {
-            "description": "Description of the rule configuration",
-            "type": "string"
-        },
-        "ruleGroups": {
-            "description": "Groups of rules based on common aspect of validation.",
-            "type": "object",
-            "patternProperties": {
-                "^[A-Z]+$":{
-                    "description": "ID of the rule group. This will also be the prefix for the specific rules's id.",
-                    "type": "object",
-                    "properties": {
-                        "description": {
-                            "description": "Description of the rule group.",
-                            "type": "string"
-                        },
-                        "rules": {
-                            "description": "Rules for validation",
-                            "type": "object",
-                            "patternProperties": {
-                                "[0-9]+": {
-                                    "description": "Defines the rule to validate",
-                                    "type": "object",
-                                    "properties": {
-                                        "description": {
-                                            "description": "Description of the rule.",
-                                            "type": "string"
-                                        },
-                                        "path": {
-                                            "description": "Path for the file/folder to be evaluated.",
-                                            "type": "string",
-                                            "pattern": "^(.+)/([^/]+)$"
-                                        },
-                                        "files": {
-                                            "description": "Array of files/folder to be evaluated.",
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "conditions": {
-                                            "description": "Array of conditions to evaluate against. All conditions must pass for the rule to pass.",
-                                            "type": "array",
-                                            "items": {
-                                                "description": "A condition to evaluate on the rule.",
-                                                "type": "object",
-                                                "properties": {
-                                                    "pathExists": {
-                                                        "description": "Check whether the path(file/folder) exists. Setting this to false does not have an effect.",
-                                                        "enum": [true]
-                                                    },
-                                                    "contains": {
-                                                        "description": "Checks the plaintext file if it contains a specific value.",
-                                                        "type": "array",
-                                                        "items": {
-                                                            "description": "Definition for content to find",
-                                                            "type": "object",
-                                                            "properties": {
-                                                                "type": {
-                                                                    "description": "Valid: static, regex",
-                                                                    "enum": ["static", "regex"]
-                                                                },
-                                                                "value": {
-                                                                    "type": "string"
-                                                                }
-                                                            },
-                                                            "required": ["type", "value"]
-                                                        }
-                                                    },
-                                                    "notContains": {
-                                                        "description": "Checks the plaintext file that nothing matches the regex pattern.",
-                                                        "type": "array",
-                                                        "items": {
-                                                            "type": "string"
-                                                        }
-                                                    },
-                                                    "markdownMeta": {
-                                                        "description": "Evaluates the frontmatter values in markdown files. Array of objects where the key is the metadata property and the value is regex.",
-                                                        "type": "object",
-                                                        "patternProperties": {
-                                                            ".*": {
-                                                                "description": "Regex value for this front matter property",
-                                                                "type": "string"
-                                                            }
-                                                        }
-                                                    },
-                                                    "checkReferenceExist": {
-                                                        "description": "Checks if the path(file/folder) exists in the blueprints",
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "pattern": {
-                                                                "description": "(Regex) Define the pattern of the 'link' or reference",
-                                                                "type": "string",
-                                                                "pattern": ".*\\(.*\\).*"
-                                                            },
-                                                            "matchGroup": {
-                                                                "description": "Matching group in the pattern.",
-                                                                "type": "number"
-                                                            }
-                                                        },
-                                                        "required": ["pattern", "matchGroup"],
-                                                        "additionalProperties": false
-                                                    }
-                                                },
-                                                "additionalProperties": false
-                                            },
-                                            "minItems": 1
-                                        },
-                                        "level": {
-                                            "description": "Severity level of the rule. Valid: ['warning', 'error']",
-                                            "enum": ["warning", "error"]
-                                        }
-                                    },
-                                    "required": ["description", "conditions", "level"],
-                                    "oneOf": [{
-                                        "required": ["files"],
-                                        "properties": {
-                                            "path": false 
-                                        }
-                                    }, {
-                                        "required": ["path"],
-                                        "properties": {
-                                            "files": false 
-                                        }
-                                    }],
-                                    "additionalProperties": false
-                                }
-                            },
-                            "additionalProperties": false
-                        }
-                    },
-                    "required": ["rules"],
-                    "additionalProperties": false
+    "name": "Blueprint Rules",
+    "description": "Default rule configuration for Genesys Cloud Blueprints",
+    "ruleGroups": {
+        "STRUCT": {
+            "description": "Validation for required file/folder existence",
+            "rules": {
+                "1": {
+                    "description": "All Genesys Cloud blueprints must include a README.MD file.  This file should contain a brief introduction of the blueprint.",
+                    "path": "./README.md",
+                    "conditions": [{ "pathExists": true }],
+                    "level": "error"
+                },
+                "2": {
+                    "description": "Every Genesys Cloud blueprint should have a blueprint directory at the root of the project.  This directory should hold all assets associated with the blueprint.",
+                    "path": "./blueprint",
+                    "conditions": [{ "pathExists": true }],
+                    "level": "error"
+                },
+                "3": {
+                    "description": "Every Genesys Cloud blueprint should have a blueprint/images directory that will contain all of the image assets for a project.",
+                    "path": "./blueprint/images",
+                    "conditions": [{ "pathExists": true }],
+                    "level": "error"
+                },
+                "4": {
+                    "description": "Every Genesys Cloud blueprint should have a blueprint/images directory that will contain all of the image assets for a project.",
+                    "path": "./blueprint/images",
+                    "conditions": [{ "pathExists": true }],
+                    "level": "error"
+                },
+                "5": {
+                    "description": "Every Genesys Cloud blueprint should have a blueprint/index.md that contains a complete writeup in Markdown of the blueprint.",
+                    "path": "./blueprint/index.md",
+                    "conditions": [{ "pathExists": true }],
+                    "level": "error"
                 }
-            },
-            "additionalProperties": false
+            }
+        },
+        "CONTENT": {
+            "description": "Content related validation",
+            "rules": {
+                "1": {
+                    "description": "Overview image should be referred to in README.MD",
+                    "path": "./README.md",
+                    "conditions": [{
+                        "contains": [{
+                            "type": "regex",
+                            "value": "!\\[.*\\]\\(images/overview\\.png +['|\"].*['|\"]\\)"
+                        }]
+                    }],
+                    "level": "error"
+                },
+                "2": {
+                    "description": "The front matter must be defined in the file or the blueprint will not appear in the Developer Center",
+                    "path": "./blueprint/index.md",
+                    "conditions": [{
+                        "contains": [{
+                            "type": "regex",
+                            "value": "^---\\r*\\n*.*\\r*\n*---"
+                        }]
+                    }],
+                    "level": "error"
+                },
+                "3": {
+                    "description": "  The front matter must be defined in the file or the blueprint will not appear in the Developer Center.",
+                    "path": "./README.md",
+                    "conditions": [{
+                        "markdownMeta": {
+                            "title": ".*",
+                            "author": ".*",
+                            "indextype": "blueprint",
+                            "icon": "blueprint",
+                            "image": ".*",
+                            "category": ".*",
+                            "summary": ".*"
+                        }
+                    }],
+                    "level": "error"
+                },
+                "4": {
+                    "description": "The index.md must have a ## Scenario section describing the problem the blueprint is trying to solve.",
+                    "path": "./blueprint/index.md",
+                    "conditions": [{
+                        "contains": [{
+                            "type": "regex",
+                            "value": "## *Scenario *"
+                        }]
+                    }],
+                    "level": "error"
+                },
+                "5": {
+                    "description": "The index.md must have a ## Solution section describing the problem the blueprint is trying to solve.",
+                    "path": "./blueprint/index.md",
+                    "conditions": [{
+                        "contains": [{
+                            "type": "regex",
+                            "value": "## *Solution *"
+                        }]
+                    }],
+                    "level": "error"
+                },
+                "6": {
+                    "description": "The index.md must have a ## Content section describing the problem the blueprint is trying to solve.",
+                    "path": "./blueprint/index.md",
+                    "conditions": [{
+                        "contains": [{
+                            "type": "regex",
+                            "value": "## *Content *"
+                        }]
+                    }],
+                    "level": "error"
+                },
+                "7": {
+                    "description": "The index.md must have a ## Prerequisites section describing the problem the blueprint is trying to solve.",
+                    "path": "./blueprint/index.md",
+                    "conditions": [{
+                        "contains": [{
+                            "type": "regex",
+                            "value": "## *Prerequisites *"
+                        }]
+                    }],
+                    "level": "error"
+                },
+                "8": {
+                    "description": "The index.md must have a ### Specialized knowledge section describing the problem the blueprint is trying to solve.",
+                    "path": "./blueprint/index.md",
+                    "conditions": [{
+                        "contains": [{
+                            "type": "regex",
+                            "value": "### *Specialized knowledge *"
+                        }]
+                    }],
+                    "level": "error"
+                },
+                "9": {
+                    "description": "The index.md must have a ## Implementation steps section describing the problem the blueprint is trying to solve.",
+                    "path": "./blueprint/index.md",
+                    "conditions": [{
+                        "contains": [{
+                            "type": "regex",
+                            "value": "## *Implementation steps *"
+                        }]
+                    }],
+                    "level": "error"
+                },
+                "10": {
+                    "description": "The index.md must have a ### Download the repository containing the project files section describing the problem the blueprint is trying to solve.",
+                    "path": "./blueprint/index.md",
+                    "conditions": [{
+                        "contains": [{
+                            "type": "regex",
+                            "value": "### *Download the repository containing the project files *"
+                        }]
+                    }],
+                    "level": "error"
+                },
+                "11": {
+                    "description": "The index.md must have a ## Additional resources section describing the problem the blueprint is trying to solve.",
+                    "path": "./blueprint/index.md",
+                    "conditions": [{
+                        "contains": [{
+                            "type": "regex",
+                            "value": "## *Additional resources *"
+                        }]
+                    }],
+                    "level": "error"
+                }
+            }
+        },
+        "LINK": {
+            "description": "Validates the links in Markdown files",
+            "rules": {
+                "1": {
+                    "description": "Image links in the README.md or index.md file should point to a valid image file.",
+                    "files": ["./readme.md", "./blueprint/index.md"],
+                    "conditions": [{
+                        "checkReferenceExist": ["!\\[.*\\]\\((.*\\) *\".*\").*"]
+                    }],
+                    "level": "error"
+                },
+                "2": {
+                    "description": "Image links in the README.md or index.md file is missing alternative text.",
+                    "files": ["./readme.md", "./blueprint/index.md"],
+                    "conditions": [{
+                        "notContains": ["!\\[.*\\]\\(.*[^ \"]+[^\"]*\\)"]
+                    }],
+                    "level": "error"
+                },
+                "3": {
+                    "description": "Hyperlinks in the README.md or index.md file is missing alternative text.",
+                    "files": ["./readme.md", "./blueprint/index.md"],
+                    "conditions": [{
+                        "notContains": ["\\[.*\\]\\(.*[^ \"]+[^\"]*\\)"]
+                    }],
+                    "level": "error"
+                }
+            }
         }
-    },
-    "required": ["name", "description", "ruleGroups"],
-    "additionalProperties": false
+    }
 }
+
 `

@@ -96,20 +96,10 @@
                                                     },
                                                     "checkReferenceExist": {
                                                         "description": "Checks if the path(file/folder) exists in the blueprints",
-                                                        "type": "object",
-                                                        "properties": {
-                                                            "pattern": {
-                                                                "description": "(Regex) Define the pattern of the 'link' or reference",
-                                                                "type": "string",
-                                                                "pattern": ".*\\(.*\\).*"
-                                                            },
-                                                            "matchGroup": {
-                                                                "description": "Matching group in the pattern.",
-                                                                "type": "number"
-                                                            }
-                                                        },
-                                                        "required": ["pattern", "matchGroup"],
-                                                        "additionalProperties": false
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
                                                     }
                                                 },
                                                 "additionalProperties": false
