@@ -58,15 +58,19 @@ type ContainsCondition struct {
 }
 
 type EvaluationResult struct {
-	results []*RuleResult
+	SuccessResults []*RuleResult `json:"success"`
+	FailureResults []*RuleResult `json:"failed"`
+	ErrorResults   []*RuleResult `json:"error"`
+	Repo           string        `json:"repo"`
 }
 
 type RuleResult struct {
-	Id             string
-	Rule           *Rule
-	IsSuccess      *bool
-	FileHighlights []*FileHighlight
-	Error          *EvaluationError
+	Id             string           `json:"id"`
+	Level          RuleLevel        `json:"level"`
+	Description    string           `json:"description"`
+	IsSuccess      *bool            `json:"-"`
+	FileHighlights []*FileHighlight `json:"fileHighlights,omitempty"`
+	Error          *EvaluationError `json:"error,omitempty"`
 }
 
 type ConditionResult struct {
@@ -76,9 +80,9 @@ type ConditionResult struct {
 }
 
 type FileHighlight struct {
-	Path        string
-	LineNumber  int
-	LineContent string
+	Path        string `json:"path"`
+	LineNumber  int    `json:"lineNumber"`
+	LineContent string `json:"lineContent"`
 }
 
 type EvaluationError struct {
@@ -111,7 +115,23 @@ func (input *EvaluationData) Evaluate() (*EvaluationResult, error) {
 
 	for i := 0; i < rulesCount; i++ {
 		ruleResult := <-ch
-		finalResult.results = append(finalResult.results, ruleResult)
+
+		if ruleResult.Error != nil {
+			finalResult.ErrorResults = append(finalResult.ErrorResults, ruleResult)
+			continue
+		}
+		if ruleResult.IsSuccess == nil {
+			finalResult.ErrorResults = append(finalResult.ErrorResults, ruleResult)
+			continue
+		}
+		if *ruleResult.IsSuccess {
+			finalResult.SuccessResults = append(finalResult.SuccessResults, ruleResult)
+			continue
+		}
+		if !*ruleResult.IsSuccess {
+			finalResult.FailureResults = append(finalResult.FailureResults, ruleResult)
+			continue
+		}
 	}
 
 	return finalResult, nil
@@ -148,8 +168,9 @@ func (ruleGroup *RuleGroup) Evaluate(ch chan *RuleResult, groupId string, path s
 // content files
 func (rule *Rule) Evaluate(ruleId string, contentPath string) *RuleResult {
 	ret := &RuleResult{
-		Id:   ruleId,
-		Rule: rule,
+		Id:          ruleId,
+		Level:       rule.Level,
+		Description: rule.Description,
 	}
 
 	// Short circuited evaluation for conditions
