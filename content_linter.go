@@ -61,7 +61,6 @@ type EvaluationResult struct {
 	SuccessResults []*RuleResult `json:"success"`
 	FailureResults []*RuleResult `json:"failed"`
 	ErrorResults   []*RuleResult `json:"error"`
-	Repo           string        `json:"repo"`
 }
 
 type RuleResult struct {

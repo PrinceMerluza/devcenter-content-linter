@@ -29,7 +29,7 @@ func getParams() (paramBlueprint, error) {
 	return paramBlueprint{repoPath, rulePath}, nil
 }
 
-func prepareFiles(paramsData *paramBlueprint, tempDir string) (r *EvaluationData, errors []error) {
+func prepareFiles(paramsData *paramBlueprint) (r *EvaluationData, errors []error) {
 	var wg sync.WaitGroup
 	var err error
 	r = &EvaluationData{}
@@ -38,6 +38,17 @@ func prepareFiles(paramsData *paramBlueprint, tempDir string) (r *EvaluationData
 	go func() {
 		defer wg.Done()
 
+		// For local copy of content repo
+		if !IsURL(paramsData.repoPath) {
+			r.ContentPath = paramsData.repoPath
+			return
+		}
+
+		// For remote repo,
+		tempDir, err := createTempDir()
+		if err != nil {
+			errors = append(errors, err)
+		}
 		if r.ContentPath, err = cloneBlueprint(tempDir, paramsData.repoPath); err != nil {
 			errors = append(errors, err)
 		}
@@ -56,24 +67,7 @@ func prepareFiles(paramsData *paramBlueprint, tempDir string) (r *EvaluationData
 	return r, errors
 }
 
-func evaluate(paramsData *paramBlueprint) (*EvaluationResult, error) {
-	// Create temporary directory for blueprints
-	tempDir, err := ioutil.TempDir(".", ".tmp-content-*")
-	if err != nil {
-		log.Print("Can't create temporary directory")
-		return nil, err
-	}
-	defer os.RemoveAll(tempDir)
-
-	// Clone blueprint and load rule config
-	data, errs := prepareFiles(paramsData, tempDir)
-	for _, err := range errs {
-		log.Print(err.Error())
-	}
-	if len(errs) > 0 {
-		return nil, errors.New("Error when preparing necessary files")
-	}
-
+func evaluate(data *EvaluationData) (*EvaluationResult, error) {
 	// Evaluate the content
 	finalResult, err := data.Evaluate()
 	if err != nil {
@@ -90,8 +84,6 @@ func evaluate(paramsData *paramBlueprint) (*EvaluationResult, error) {
 	sort.SliceStable(finalResult.ErrorResults, func(i, j int) bool {
 		return finalResult.ErrorResults[i].Id < finalResult.ErrorResults[j].Id
 	})
-
-	finalResult.Repo = paramsData.repoPath
 
 	return finalResult, err
 }
@@ -154,6 +146,17 @@ func exportJsonResult(finalResult *EvaluationResult, filename string) error {
 	return nil
 }
 
+func createTempDir() (string, error) {
+	// Create temporary directory for blueprints
+	tempDir, err := ioutil.TempDir(".", ".tmp-content-*")
+	if err != nil {
+		log.Print("Can't create temporary directory")
+		return "", err
+	}
+
+	return tempDir, nil
+}
+
 func main() {
 	// Get CLI parameter values
 	paramsData, err := getParams()
@@ -161,11 +164,22 @@ func main() {
 		log.Fatal(err)
 	}
 
-	finalResult, err := evaluate(&paramsData)
+	// Prepare the repo and the rule file
+	data, errs := prepareFiles(&paramsData)
+	for _, err := range errs {
+		log.Print(err.Error())
+	}
+	if len(errs) > 0 {
+		log.Fatal("Error when preparing necessary files")
+	}
+
+	// Evalue the repository
+	finalResult, err := evaluate(data)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// Output
 	printResults(finalResult)
 	err = exportJsonResult(finalResult, "result.json")
 	if err != nil {
