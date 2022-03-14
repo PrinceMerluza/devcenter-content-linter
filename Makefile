@@ -1,5 +1,5 @@
 build:
-	go build -o bin/blueprint_linter.exe
+	go build -o bin/content_linter
 
 run:
 	go run .

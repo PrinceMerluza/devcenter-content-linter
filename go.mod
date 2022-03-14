@@ -1,4 +1,4 @@
-module github.com/PrinceMerluza/content_linter
+module github.com/PrinceMerluza/devcenter-content-linter
 
 go 1.17
 
