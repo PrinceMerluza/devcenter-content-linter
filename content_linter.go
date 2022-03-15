@@ -277,6 +277,12 @@ func EvaluatePathExistCondition(filePaths *[]string) *ConditionResult {
 func EvaluateContainsCondition(filePaths *[]string, arrContains *[]ContainsCondition) *ConditionResult {
 	ret := &ConditionResult{}
 
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered in f", r)
+		}
+	}()
+
 	for _, path := range *filePaths {
 		fileData, err := os.ReadFile(path)
 		if err != nil {
@@ -293,11 +299,14 @@ func EvaluateContainsCondition(filePaths *[]string, arrContains *[]ContainsCondi
 					ret.IsSuccess = NewBoolPtr(false)
 				}
 			case "regex":
-				matched, err := regexp.MatchString(contains.Value, dataString)
+				re, err := regexp.Compile(contains.Value)
+				fmt.Println(contains.Value)
 				if err != nil {
 					ret.Error = err
 					return ret
 				}
+
+				matched := re.MatchString(dataString)
 				if !matched {
 					ret.IsSuccess = NewBoolPtr(false)
 				}
@@ -322,6 +331,7 @@ func EvaluateNotContainsCondition(filePaths *[]string, notContains *[]string) *C
 		file, err := os.Open(path)
 		if err != nil {
 			ret.Error = err
+			return ret
 		}
 		defer file.Close()
 
@@ -364,21 +374,20 @@ func EvaluateNotContainsCondition(filePaths *[]string, notContains *[]string) *C
 func EvaluateCheckReferenceExistCondition(filePaths *[]string, referencePatterns *[]string) *ConditionResult {
 	ret := &ConditionResult{}
 
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Println("Recovered in f", r)
-		}
-	}()
-
 	for _, path := range *filePaths {
 		file, err := os.Open(path)
 		if err != nil {
 			ret.Error = err
+			return ret
 		}
 		defer file.Close()
 
 		for _, pattern := range *referencePatterns {
-			re := regexp.MustCompile(pattern)
+			re, err := regexp.Compile(pattern)
+			if err != nil {
+				ret.Error = err
+				return ret
+			}
 
 			scanner := bufio.NewScanner(file)
 			lineNumber := 0
