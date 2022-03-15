@@ -57,7 +57,7 @@
                     "conditions": [{
                         "contains": [{
                             "type": "regex",
-                            "value": "^---\\r*\\n*.*\\r*\n*---"
+                            "value": "(?s)^---.*---"
                         }]
                     }],
                     "level": "error"
@@ -186,7 +186,7 @@
             "rules": {
                 "1": {
                     "description": "Image links in the README.md or index.md file should point to a valid image file.",
-                    "files": ["./readme.md", "./blueprint/index.md"],
+                    "files": ["./README.md", "./blueprint/index.md"],
                     "conditions": [{
                         "checkReferenceExist": ["!\\[.*\\]\\((.*\\) *\".*\").*"]
                     }],
@@ -194,7 +194,7 @@
                 },
                 "2": {
                     "description": "Image links in the README.md or index.md file is missing alternative text.",
-                    "files": ["./readme.md", "./blueprint/index.md"],
+                    "files": ["./README.md", "./blueprint/index.md"],
                     "conditions": [{
                         "notContains": ["!\\[.*\\]\\(.*[^ \"]+[^\"]*\\)"]
                     }],
@@ -202,7 +202,7 @@
                 },
                 "3": {
                     "description": "Hyperlinks in the README.md or index.md file is missing alternative text.",
-                    "files": ["./readme.md", "./blueprint/index.md"],
+                    "files": ["./README.md", "./blueprint/index.md"],
                     "conditions": [{
                         "notContains": ["\\[.*\\]\\(.*[^ \"]+[^\"]*\\)"]
                     }],
