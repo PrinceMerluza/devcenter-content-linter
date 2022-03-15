@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"sort"
 	"sync"
 )
@@ -16,6 +17,7 @@ var logger = log.New(os.Stdout, "", 0)
 type paramBlueprint struct {
 	repoPath string
 	rulePath string
+	fileDir  string
 }
 
 func getParams() (paramBlueprint, error) {
@@ -25,8 +27,13 @@ func getParams() (paramBlueprint, error) {
 
 	repoPath := os.Args[1]
 	rulePath := os.Args[2]
+	fileDir := "."
 
-	return paramBlueprint{repoPath, rulePath}, nil
+	if len(os.Args) > 3 {
+		fileDir = os.Args[3]
+	}
+
+	return paramBlueprint{repoPath, rulePath, fileDir}, nil
 }
 
 func prepareFiles(paramsData *paramBlueprint) (r *EvaluationData, errors []error) {
@@ -44,8 +51,8 @@ func prepareFiles(paramsData *paramBlueprint) (r *EvaluationData, errors []error
 			return
 		}
 
-		// For remote repo,
-		tempDir, err := createTempDir()
+		// For remote repo, clone the blueprint
+		tempDir, err := createTempDir(paramsData.fileDir)
 		if err != nil {
 			errors = append(errors, err)
 		}
@@ -146,9 +153,9 @@ func exportJsonResult(finalResult *EvaluationResult, filename string) error {
 	return nil
 }
 
-func createTempDir() (string, error) {
+func createTempDir(root string) (string, error) {
 	// Create temporary directory for blueprints
-	tempDir, err := ioutil.TempDir(".", ".tmp-content-*")
+	tempDir, err := ioutil.TempDir(root, ".tmp-content-*")
 	if err != nil {
 		log.Print("Can't create temporary directory")
 		return "", err
@@ -181,7 +188,7 @@ func main() {
 
 	// Output
 	printResults(finalResult)
-	err = exportJsonResult(finalResult, "result.json")
+	err = exportJsonResult(finalResult, filepath.Join(paramsData.fileDir, "result.json"))
 	if err != nil {
 		log.Fatal(err)
 	}
