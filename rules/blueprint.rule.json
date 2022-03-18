@@ -46,7 +46,7 @@
                     "conditions": [{
                         "contains": [{
                             "type": "regex",
-                            "value": "!\\[.*\\]\\(images/overview\\.png +['|\"].*['|\"]\\)"
+                            "value": "!\\[.*\\]\\(blueprint/images/overview\\.png *['|\"]*.*['|\"]*\\)"
                         }]
                     }],
                     "level": "error"
