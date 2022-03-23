@@ -26,95 +26,76 @@
                         },
                         "rules": {
                             "description": "Rules for validation",
-                            "type": "object",
-                            "patternProperties": {
-                                "[0-9]+": {
-                                    "description": "Defines the rule to validate",
-                                    "type": "object",
-                                    "properties": {
-                                        "description": {
-                                            "description": "Description of the rule.",
-                                            "type": "string"
-                                        },
-                                        "path": {
-                                            "description": "Path for the file/folder to be evaluated.",
-                                            "type": "string",
-                                            "pattern": "^(.+)/([^/]+)$"
-                                        },
-                                        "files": {
-                                            "description": "Array of files/folder to be evaluated.",
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "conditions": {
-                                            "description": "Array of conditions to evaluate against. All conditions must pass for the rule to pass.",
-                                            "type": "array",
-                                            "items": {
-                                                "description": "A condition to evaluate on the rule.",
-                                                "type": "object",
-                                                "properties": {
-                                                    "pathExists": {
-                                                        "description": "Check whether the path(file/folder) exists. Setting this to false does not have an effect.",
-                                                        "enum": [true]
-                                                    },
-                                                    "contains": {
-                                                        "description": "Checks the plaintext file if it contains a specific value.",
-                                                        "type": "array",
-                                                        "items": {
-                                                            "description": "Definition for content to find",
-                                                            "type": "object",
-                                                            "properties": {
-                                                                "type": {
-                                                                    "description": "Valid: static, regex",
-                                                                    "enum": ["static", "regex"]
-                                                                },
-                                                                "value": {
-                                                                    "type": "string"
-                                                                }
+                            "type": "array",
+                            "items": {
+                                "description": "Defines the rule to validate",
+                                "type": "object",
+                                "properties": {
+                                    "description": {
+                                        "description": "Description of the rule.",
+                                        "type": "string"
+                                    },
+                                    "file": {
+                                        "description": "File to be evaluated",
+                                        "type": "string",
+                                        "pattern": "^(.+)/([^/]+)$"
+                                    },
+                                    "conditions": {
+                                        "description": "Array of conditions to evaluate against. All conditions must pass for the rule to pass.",
+                                        "type": "array",
+                                        "items": {
+                                            "description": "A condition to evaluate on the rule.",
+                                            "type": "object",
+                                            "properties": {
+                                                "pathExists": {
+                                                    "description": "Check whether the path(file/folder) exists.",
+                                                    "type": "string",
+                                                    "pattern": "^(.+)/([^/]+)$"
+                                                },
+                                                "contains": {
+                                                    "description": "Checks the plaintext file if it contains a specific value.",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "description": "Definition for content to find",
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "type": {
+                                                                "description": "Valid: static, regex",
+                                                                "enum": ["static", "regex"]
                                                             },
-                                                            "required": ["type", "value"]
-                                                        }
-                                                    },
-                                                    "notContains": {
-                                                        "description": "Checks the plaintext file that nothing matches the regex pattern.",
-                                                        "type": "array",
-                                                        "items": {
-                                                            "type": "string"
-                                                        }
-                                                    },
-                                                    "checkReferenceExist": {
-                                                        "description": "Checks if the path(file/folder) exists in the blueprints",
-                                                        "type": "array",
-                                                        "items": {
-                                                            "type": "string"
-                                                        }
+                                                            "value": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "required": ["type", "value"]
                                                     }
                                                 },
-                                                "additionalProperties": false
+                                                "notContains": {
+                                                    "description": "Checks the plaintext file that nothing matches the regex pattern.",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "checkReferenceExist": {
+                                                    "description": "Checks if the path(file/folder) exists in the blueprints",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
                                             },
-                                            "minItems": 1
+                                            "additionalProperties": false
                                         },
-                                        "level": {
-                                            "description": "Severity level of the rule. Valid: ['warning', 'error']",
-                                            "enum": ["warning", "error"]
-                                        }
+                                        "minItems": 1
                                     },
-                                    "required": ["description", "conditions", "level"],
-                                    "oneOf": [{
-                                        "required": ["files"],
-                                        "properties": {
-                                            "path": false 
-                                        }
-                                    }, {
-                                        "required": ["path"],
-                                        "properties": {
-                                            "files": false 
-                                        }
-                                    }],
-                                    "additionalProperties": false
-                                }
+                                    "level": {
+                                        "description": "Severity level of the rule. Valid: ['warning', 'error']",
+                                        "enum": ["warning", "error"]
+                                    }
+                                },
+                                "required": ["description", "conditions", "level"],
+                                "additionalProperties": false
                             },
                             "additionalProperties": false
                         }

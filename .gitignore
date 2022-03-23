@@ -1,4 +1,4 @@
 .vscode
 **/tmp
 **/.tmp-content*
-/result.json
+./result.json
