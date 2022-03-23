@@ -1,0 +1,176 @@
+---
+name: Blueprint Rules
+description: Default rule configuration for Genesys Cloud Blueprints
+ruleGroups:
+  STRUCT:
+    description: Validation for required file/folder existence
+    rules:
+    - description: All Genesys Cloud blueprints must include a README.MD file.  This
+        file should contain a brief introduction of the blueprint.
+      conditions:
+      - pathExists: "./README.md"
+      level: error
+    - description: Every Genesys Cloud blueprint should have a blueprint directory
+        at the root of the project.  This directory should hold all assets associated
+        with the blueprint.
+      conditions:
+      - pathExists: "./blueprint"
+      level: error
+    - description: Every Genesys Cloud blueprint should have a blueprint/images directory
+        that will contain all of the image assets for a project.
+      conditions:
+      - pathExists: "./blueprint/images"
+      level: error
+    - description: Every Genesys Cloud blueprint should have a blueprint/images directory
+        that will contain all of the image assets for a project.
+      conditions:
+      - pathExists: "./blueprint/images"
+      level: error
+    - description: Every Genesys Cloud blueprint should have a blueprint/index.md
+        that contains a complete writeup in Markdown of the blueprint.
+      conditions:
+      - pathExists: "./blueprint/index.md"
+      level: error
+  CONTENT:
+    description: Content related validation
+    rules:
+    - description: Overview image should be referred to in README.MD
+      file: "./README.md"
+      conditions:
+      - contains:
+        - type: regex
+          value: '!\[.*\]\(blueprint/images/overview\.png *[''|"]*.*[''|"]*\)'
+      level: error
+    - description: The front matter must be defined in the file or the blueprint will
+        not appear in the Developer Center
+      file: "./blueprint/index.md"
+      conditions:
+      - contains:
+        - type: regex
+          value: "(?s)^---.*---"
+      level: error
+    - description: 'The index.md file''s front matter must include the following fields:
+        title, author, indextype, icon, image, category, and summary'
+      file: "./blueprint/index.md"
+      conditions:
+      - contains:
+        - type: regex
+          value: 'title: *.*'
+        - type: regex
+          value: 'author: *.*'
+        - type: regex
+          value: 'indextype: *blueprint'
+        - type: regex
+          value: 'icon: *blueprint'
+        - type: regex
+          value: 'image: *.*'
+        - type: regex
+          value: 'category: *.*'
+        - type: regex
+          value: 'summary: *.*'
+      level: error
+    - description: 'The index.md must have a ## Scenario section describing the problem
+        the blueprint is trying to solve.'
+      file: "./blueprint/index.md"
+      conditions:
+      - contains:
+        - type: regex
+          value: "## *Scenario *"
+      level: error
+    - description: 'The index.md must have a ## Solution section describing the problem
+        the blueprint is trying to solve.'
+      file: "./blueprint/index.md"
+      conditions:
+      - contains:
+        - type: regex
+          value: "## *Solution *"
+      level: error
+    - description: 'The index.md must have a ## Content section describing the problem
+        the blueprint is trying to solve.'
+      file: "./blueprint/index.md"
+      conditions:
+      - contains:
+        - type: regex
+          value: "## *Content *"
+      level: error
+    - description: 'The index.md must have a ## Prerequisites section describing the
+        problem the blueprint is trying to solve.'
+      file: "./blueprint/index.md"
+      conditions:
+      - contains:
+        - type: regex
+          value: "## *Prerequisites *"
+      level: error
+    - description: 'The index.md must have a ### Specialized knowledge section describing
+        the problem the blueprint is trying to solve.'
+      file: "./blueprint/index.md"
+      conditions:
+      - contains:
+        - type: regex
+          value: "### *Specialized knowledge *"
+      level: error
+    - description: 'The index.md must have a ## Implementation steps section describing
+        the problem the blueprint is trying to solve.'
+      file: "./blueprint/index.md"
+      conditions:
+      - contains:
+        - type: regex
+          value: "## *Implementation steps *"
+      level: error
+    - description: 'The index.md must have a ### Download the repository containing
+        the project files section describing the problem the blueprint is trying to
+        solve.'
+      file: "./blueprint/index.md"
+      conditions:
+      - contains:
+        - type: regex
+          value: "### *Download the repository containing the project files *"
+      level: error
+    - description: 'The index.md must have a ## Additional resources section describing
+        the problem the blueprint is trying to solve.'
+      file: "./blueprint/index.md"
+      conditions:
+      - contains:
+        - type: regex
+          value: "## *Additional resources *"
+      level: error
+  LINK:
+    description: Validates the links in Markdown files
+    rules:
+    - description: Image links in the README.md file should point to a valid image
+        file.
+      file: "./README.md"
+      conditions:
+      - checkReferenceExist:
+        - "!\\[.*\\]\\((.*)\\).*"
+      level: error
+    - description: Image links in index.md file should point to a valid image file.
+      file: "./blueprint/index.md"
+      conditions:
+      - checkReferenceExist:
+        - "!\\[.*\\]\\((.*)\\).*"
+      level: error
+    - description: Image links in the README.md file is missing alternative text.
+      file: "./README.md"
+      conditions:
+      - notContains:
+        - '!\[.*\]\(.*[^ "]+[^"]*\)'
+      level: error
+    - description: Image links in the index.md file is missing alternative text.
+      file: "./blueprint/index.md"
+      conditions:
+      - notContains:
+        - '!\[.*\]\(.*[^ "]+[^"]*\)'
+      level: error
+    - description: Hyperlinks in the README.md file is missing alternative text.
+      file: "./README.md"
+      conditions:
+      - notContains:
+        - \[.*\]\(.*[^ "]+[^"]*\)
+      level: error
+    - description: Hyperlinks in the index.md file is missing alternative text.
+      file: "./blueprint/index.md"
+      conditions:
+      - notContains:
+        - \[.*\]\(.*[^ "]+[^"]*\)
+      level: error
