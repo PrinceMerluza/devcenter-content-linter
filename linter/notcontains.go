@@ -2,8 +2,10 @@ package linter
 
 import (
 	"bufio"
+	"errors"
 	"os"
 	"regexp"
+	"strings"
 )
 
 type NotContainsCondition struct {
@@ -26,6 +28,12 @@ func (condition *NotContainsCondition) Validate() *ConditionResult {
 	defer file.Close()
 
 	for _, contains := range *condition.NotContains {
+		if strings.TrimSpace(contains) == "" {
+			ret.Error = errors.New("value of notcontains is empty")
+			ret.IsSuccess = false
+			break
+		}
+
 		scanner := bufio.NewScanner(file)
 		lineNumber := 0
 		for scanner.Scan() {
@@ -45,6 +53,7 @@ func (condition *NotContainsCondition) Validate() *ConditionResult {
 					Path:        condition.Path,
 					LineNumber:  lineNumber,
 					LineContent: lineString,
+					LineCount:   1,
 				})
 			}
 		}

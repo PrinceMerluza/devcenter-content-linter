@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"net/url"
@@ -10,26 +11,20 @@ import (
 	"strings"
 )
 
-func GetStringAtLine(data string, line int) (string, error) {
-	lines := strings.Count(data, "\n")
+func GetStringAtLine(s string, line int) (string, error) {
+	var lines []string
+	sc := bufio.NewScanner(strings.NewReader(s))
+	for sc.Scan() {
+		lines = append(lines, sc.Text())
+	}
 
-	if lines < line {
+	// adjust line number to 0-based index
+	aLine := line - 1
+	if aLine > len(lines) {
 		return "", errors.New("line number out of range")
 	}
 
-	lines = 0
-	for _, c := range data {
-		if c == '\n' {
-			lines++
-		}
-
-		if lines == line {
-			break
-		}
-	}
-	lastIndex := strings.Index(data[lines:], "\n")
-
-	return data[lines:lastIndex], nil
+	return lines[aLine], nil
 }
 
 func NewBoolPtr(val bool) *bool {

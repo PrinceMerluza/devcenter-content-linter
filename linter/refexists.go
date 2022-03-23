@@ -2,6 +2,7 @@ package linter
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -44,6 +45,12 @@ func (condition *RefExistsCondition) Validate() *ConditionResult {
 			subMatch := re.FindStringSubmatch(lineString)
 			if subMatch == nil {
 				continue
+			}
+
+			if len(subMatch) <= 1 {
+				ret.Error = errors.New("no matching group found. Regex may be incorrect")
+				ret.IsSuccess = false
+				return ret
 			}
 
 			// NOTE: The second submatch(1st matching group) is always used to get the path

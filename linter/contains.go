@@ -31,6 +31,12 @@ func (condition *ContainsCondition) Validate() *ConditionResult {
 	dataString := string(fileData[:])
 
 	for _, contains := range *condition.ContainsArr {
+		if strings.TrimSpace(contains.Value) == "" {
+			ret.Error = errors.New("value of contains is empty")
+			ret.IsSuccess = false
+			break
+		}
+
 		switch contains.Type {
 		case "static":
 			// Get the index of matchign string
@@ -52,7 +58,7 @@ func (condition *ContainsCondition) Validate() *ConditionResult {
 			*ret.FileHighlights = append(*ret.FileHighlights, FileHighlight{
 				Path:        condition.Path,
 				LineNumber:  lineNumber,
-				LineContent: lineContent,
+				LineContent: strings.TrimSpace(lineContent),
 				LineCount:   1,
 			})
 		case "regex":
@@ -71,12 +77,12 @@ func (condition *ContainsCondition) Validate() *ConditionResult {
 
 			match := dataString[loc[0]:loc[1]]
 			lineIndex := strings.Count(dataString[:loc[0]], "\n") + 1
-			lineCount := strings.Count(dataString[loc[0]:loc[1]], "\n")
+			lineCount := strings.Count(dataString[loc[0]:loc[1]], "\n") + 1
 
 			*ret.FileHighlights = append(*ret.FileHighlights, FileHighlight{
 				Path:        condition.Path,
 				LineNumber:  lineIndex,
-				LineContent: match,
+				LineContent: strings.TrimSpace(match),
 				LineCount:   lineCount,
 			})
 		default:
