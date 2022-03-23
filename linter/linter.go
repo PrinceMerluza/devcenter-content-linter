@@ -39,6 +39,7 @@ type ConditionResult struct {
 type FileHighlight struct {
 	Path        string `json:"path"`
 	LineNumber  int    `json:"lineNumber"`
+	LineCount   int    `json:"lineCount"`
 	LineContent string `json:"lineContent"`
 }
 

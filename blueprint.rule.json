@@ -169,14 +169,14 @@
                     "description": "Image links in the README.md file should point to a valid image file.",
                     "file": "./README.md",
                     "conditions": [{
-                        "checkReferenceExist": ["!\\[.*\\]\\((.*\\) *\".*\").*"]
+                        "checkReferenceExist": ["!\\[.*\\]\\((.*)\\).*"]
                     }],
                     "level": "error"
                 }, {
                     "description": "Image links in index.md file should point to a valid image file.",
                     "file":  "./blueprint/index.md",
                     "conditions": [{
-                        "checkReferenceExist": ["!\\[.*\\]\\((.*\\) *\".*\").*"]
+                        "checkReferenceExist": ["!\\[.*\\]\\((.*)\\).*"]
                     }],
                     "level": "error"
                 }, {

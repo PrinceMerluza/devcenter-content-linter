@@ -76,10 +76,10 @@ func printResults(finalResult *linter.ValidationResult) {
 
 		if result.FileHighlights != nil {
 			for _, fileHighlight := range *result.FileHighlights {
-				fmt.Printf("\nFile: %v \nLine #%v \n%v", fileHighlight.Path, fileHighlight.LineNumber, fileHighlight.LineContent)
+				fmt.Printf("\nFile: %v \nLine #%v \n\t%v \n", fileHighlight.Path, fileHighlight.LineNumber, fileHighlight.LineContent)
 			}
 		}
-		fmt.Println("--")
+		fmt.Println()
 	}
 
 	for _, result := range *finalResult.FailureResults {
@@ -90,10 +90,10 @@ func printResults(finalResult *linter.ValidationResult) {
 
 		if result.FileHighlights != nil {
 			for _, fileHighlight := range *result.FileHighlights {
-				fmt.Printf("\nFile: %v \nLine #%v \n%v", fileHighlight.Path, fileHighlight.LineNumber, fileHighlight.LineContent)
+				fmt.Printf("\nFile: %v \nLine #%v \n%v \n", fileHighlight.Path, fileHighlight.LineNumber, fileHighlight.LineContent)
 			}
 		}
-		fmt.Println("--")
+		fmt.Println()
 	}
 }
 

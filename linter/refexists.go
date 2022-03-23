@@ -2,7 +2,9 @@ package linter
 
 import (
 	"bufio"
+	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 )
 
@@ -39,21 +41,25 @@ func (condition *RefExistsCondition) Validate() *ConditionResult {
 			lineNumber++
 			lineString := scanner.Text()
 
-			subMatch := re.FindSubmatch([]byte(lineString))
+			subMatch := re.FindStringSubmatch(lineString)
 			if subMatch == nil {
 				continue
 			}
 
 			// NOTE: The second submatch(1st matching group) is always used to get the path
-			pathToCheck := string(subMatch[1])
+			// condition.Path is always a file so need to get the directory, before adding relative path
+			pathToCheck := filepath.Join(condition.Path, "..", subMatch[1])
 
-			if _, err := os.Stat(pathToCheck); os.IsNotExist(err) {
+			fmt.Println(pathToCheck)
+
+			if _, err := os.Stat(pathToCheck); err != nil {
 				ret.IsSuccess = false
 			}
 			*ret.FileHighlights = append(*ret.FileHighlights, FileHighlight{
 				Path:        condition.Path,
 				LineNumber:  lineNumber,
 				LineContent: lineString,
+				LineCount:   1,
 			})
 		}
 

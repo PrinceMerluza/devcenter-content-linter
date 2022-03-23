@@ -3,18 +3,42 @@ package utils
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 )
 
+func GetStringAtLine(data string, line int) (string, error) {
+	lines := strings.Count(data, "\n")
+
+	if lines < line {
+		return "", errors.New("line number out of range")
+	}
+
+	lines = 0
+	for _, c := range data {
+		if c == '\n' {
+			lines++
+		}
+
+		if lines == line {
+			break
+		}
+	}
+	lastIndex := strings.Index(data[lines:], "\n")
+
+	return data[lines:lastIndex], nil
+}
+
 func NewBoolPtr(val bool) *bool {
 	return &val
 }
 
 func IsURL(path string) bool {
-	return strings.HasPrefix(strings.ToLower(path), "http")
+	_, err := url.ParseRequestURI(path)
+	return err == nil
 }
 
 func CloneRepoTemp(repoUrl string) (string, error) {
