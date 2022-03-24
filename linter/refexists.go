@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+
+	"github.com/PrinceMerluza/devcenter-content-linter/blueprintrepo"
 )
 
 type RefExistsCondition struct {
@@ -59,8 +61,9 @@ func (condition *RefExistsCondition) Validate() *ConditionResult {
 			if _, err := os.Stat(pathToCheck); err != nil {
 				ret.IsSuccess = false
 			}
+
 			*ret.FileHighlights = append(*ret.FileHighlights, FileHighlight{
-				Path:        condition.Path,
+				Path:        blueprintrepo.GetOriginalRelPath(condition.Path),
 				LineNumber:  lineNumber,
 				LineContent: lineString,
 				LineCount:   1,

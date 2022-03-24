@@ -6,6 +6,8 @@ import (
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/PrinceMerluza/devcenter-content-linter/blueprintrepo"
 )
 
 type NotContainsCondition struct {
@@ -50,7 +52,7 @@ func (condition *NotContainsCondition) Validate() *ConditionResult {
 			if matched {
 				ret.IsSuccess = false
 				*ret.FileHighlights = append(*ret.FileHighlights, FileHighlight{
-					Path:        condition.Path,
+					Path:        blueprintrepo.GetOriginalRelPath(condition.Path),
 					LineNumber:  lineNumber,
 					LineContent: lineString,
 					LineCount:   1,

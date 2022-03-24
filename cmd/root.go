@@ -9,6 +9,7 @@ import (
 	"errors"
 	"os"
 
+	"github.com/PrinceMerluza/devcenter-content-linter/blueprintrepo"
 	"github.com/PrinceMerluza/devcenter-content-linter/config"
 	"github.com/PrinceMerluza/devcenter-content-linter/linter"
 	"github.com/PrinceMerluza/devcenter-content-linter/logger"
@@ -37,16 +38,9 @@ Examples of this content are: blueprints.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		repoPath := args[0]
 
-		// If the repoPath is a URL, clone the repo
-		if isRemoteRepo {
-			tmpPath, err := utils.CloneRepoTemp(repoPath)
-			if err != nil {
-				logger.Fatal(err)
-			}
-			repoPath = tmpPath
-		}
+		blueprintrepo.UseRepo(repoPath, isRemoteRepo)
 
-		results := validateContent(repoPath)
+		results := validateContent(blueprintrepo.GetWorkingPath())
 		resultsJsonB, err := json.Marshal(results)
 		if err != nil {
 			logger.Fatal(err)

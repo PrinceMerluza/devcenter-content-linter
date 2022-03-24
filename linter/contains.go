@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/PrinceMerluza/devcenter-content-linter/blueprintrepo"
 	"github.com/PrinceMerluza/devcenter-content-linter/config"
 	"github.com/PrinceMerluza/devcenter-content-linter/utils"
 )
@@ -56,7 +57,7 @@ func (condition *ContainsCondition) Validate() *ConditionResult {
 			}
 
 			*ret.FileHighlights = append(*ret.FileHighlights, FileHighlight{
-				Path:        condition.Path,
+				Path:        blueprintrepo.GetOriginalRelPath(condition.Path),
 				LineNumber:  lineNumber,
 				LineContent: strings.TrimSpace(lineContent),
 				LineCount:   1,
@@ -80,7 +81,7 @@ func (condition *ContainsCondition) Validate() *ConditionResult {
 			lineCount := strings.Count(dataString[loc[0]:loc[1]], "\n") + 1
 
 			*ret.FileHighlights = append(*ret.FileHighlights, FileHighlight{
-				Path:        condition.Path,
+				Path:        blueprintrepo.GetOriginalRelPath(condition.Path),
 				LineNumber:  lineIndex,
 				LineContent: strings.TrimSpace(match),
 				LineCount:   lineCount,
