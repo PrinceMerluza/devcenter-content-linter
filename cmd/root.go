@@ -107,7 +107,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&logger.LoggingEnabled, "enable-logging", "l", false, "enable logging")
 	rootCmd.PersistentFlags().BoolVarP(&isRemoteRepo, "remote", "r", false, "if the repo-path is an HTTP URL")
 
-	rootCmd.PersistentFlags().StringVarP(&transform_data.TemplateFile, "transform", "t", "", "Provide a Go template file for transforming output data")
+	rootCmd.PersistentFlags().StringVarP(&transform_data.TemplateFile, "transform", "t", "", "provide a Go template file for transforming output data")
 
 	logger.InitLogger()
 }
