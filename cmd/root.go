@@ -12,6 +12,7 @@ import (
 	"github.com/PrinceMerluza/devcenter-content-linter/config"
 	"github.com/PrinceMerluza/devcenter-content-linter/linter"
 	"github.com/PrinceMerluza/devcenter-content-linter/logger"
+	"github.com/PrinceMerluza/devcenter-content-linter/transform_data"
 	"github.com/PrinceMerluza/devcenter-content-linter/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -46,8 +47,12 @@ Examples of this content are: blueprints.`,
 		}
 
 		results := validateContent(repoPath)
-		// printResults(results)
-		ExportJsonResult(results, "result.json")
+		resultsJsonB, err := json.Marshal(results)
+		if err != nil {
+			logger.Fatal(err)
+		}
+
+		utils.Render(string(resultsJsonB))
 	},
 	Args: cobra.ExactArgs(1),
 }
@@ -64,20 +69,6 @@ func validateContent(repoPath string) *linter.ValidationResult {
 	}
 
 	return result
-}
-
-func ExportJsonResult(finalResult *linter.ValidationResult, filename string) error {
-	data, err := json.Marshal(finalResult)
-	if err != nil {
-		return err
-	}
-
-	err = os.WriteFile(filename, data, 0644)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -121,6 +112,8 @@ func init() {
 
 	rootCmd.PersistentFlags().BoolVarP(&logger.LoggingEnabled, "enable-logging", "l", false, "enable logging")
 	rootCmd.PersistentFlags().BoolVarP(&isRemoteRepo, "remote", "r", false, "if the repo-path is an HTTP URL")
+
+	rootCmd.PersistentFlags().StringVarP(&transform_data.TemplateFile, "transform", "t", "", "Provide a Go template file for transforming output data")
 
 	logger.InitLogger()
 }
