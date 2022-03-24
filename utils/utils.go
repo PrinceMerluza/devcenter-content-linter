@@ -3,12 +3,13 @@ package utils
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/PrinceMerluza/devcenter-content-linter/logger"
 )
 
 func GetStringAtLine(s string, line int) (string, error) {
@@ -39,16 +40,16 @@ func IsURL(path string) bool {
 func CloneRepoTemp(repoUrl string) (string, error) {
 	tmpPath, err := os.MkdirTemp("", "gc-content")
 	if err != nil {
-		fmt.Println("Error creating temp dir:", err)
+		logger.Warn("Error creating temp dir:", err)
 		return "", err
 	}
 
-	fmt.Println("Cloning blueprint...")
+	logger.Info("Cloning blueprint...")
 
 	// Clone the blueprint into the temporary directory
 	_, err = exec.Command("git", "-C", tmpPath, "clone", repoUrl).Output()
 	if err != nil {
-		fmt.Println("Error cloning repo:", err)
+		logger.Warn("Error cloning repo:", err)
 		return "", err
 	}
 
@@ -62,7 +63,7 @@ func CloneRepoTemp(repoUrl string) (string, error) {
 		return "", err
 	}
 
-	fmt.Println("Successfully cloned blueprint")
+	logger.Info("Successfully cloned blueprint")
 	dirPath := filepath.Join(tmpPath, files[0].Name())
 
 	return dirPath, nil

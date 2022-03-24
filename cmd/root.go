@@ -7,12 +7,11 @@ package cmd
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"log"
 	"os"
 
 	"github.com/PrinceMerluza/devcenter-content-linter/config"
 	"github.com/PrinceMerluza/devcenter-content-linter/linter"
+	"github.com/PrinceMerluza/devcenter-content-linter/logger"
 	"github.com/PrinceMerluza/devcenter-content-linter/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -41,13 +40,13 @@ Examples of this content are: blueprints.`,
 		if isRemoteRepo {
 			tmpPath, err := utils.CloneRepoTemp(repoPath)
 			if err != nil {
-				log.Fatal(err)
+				logger.Fatal(err)
 			}
 			repoPath = tmpPath
 		}
 
 		results := validateContent(repoPath)
-		printResults(results)
+		// printResults(results)
 		ExportJsonResult(results, "result.json")
 	},
 	Args: cobra.ExactArgs(1),
@@ -61,40 +60,10 @@ func validateContent(repoPath string) *linter.ValidationResult {
 
 	result, err := validationData.Validate()
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	return result
-}
-
-func printResults(finalResult *linter.ValidationResult) {
-	for _, result := range *finalResult.SuccessResults {
-		fmt.Printf("\n--- SUCCESS --\n")
-
-		fmt.Printf("%s \nLevel: %s \nDescription: %s",
-			result.Id, result.Level, result.Description)
-
-		if result.FileHighlights != nil {
-			for _, fileHighlight := range *result.FileHighlights {
-				fmt.Printf("\nFile: %v \nLine #%v \n\t%v \n", fileHighlight.Path, fileHighlight.LineNumber, fileHighlight.LineContent)
-			}
-		}
-		fmt.Println()
-	}
-
-	for _, result := range *finalResult.FailureResults {
-		fmt.Printf("\n--- FAILED --\n")
-
-		fmt.Printf("%s \nLevel: %s \nDescription: %s",
-			result.Id, result.Level, result.Description)
-
-		if result.FileHighlights != nil {
-			for _, fileHighlight := range *result.FileHighlights {
-				fmt.Printf("\nFile: %v \nLine #%v \n%v \n", fileHighlight.Path, fileHighlight.LineNumber, fileHighlight.LineContent)
-			}
-		}
-		fmt.Println()
-	}
 }
 
 func ExportJsonResult(finalResult *linter.ValidationResult, filename string) error {
@@ -129,15 +98,15 @@ func initViperConfig() error {
 	viper.SetConfigFile(cfgFile)
 
 	if err := viper.ReadInConfig(); err != nil {
-		fmt.Println("Error reading config file:", err)
+		logger.Fatal("Error reading config file: ", err)
 		return err
 	}
 
-	fmt.Println("Using config file: ", viper.ConfigFileUsed())
+	logger.Info("Using config file: ", viper.ConfigFileUsed())
 
 	// Set the config data
 	if err := viper.Unmarshal(&config.LoadedRuleSet); err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 
 	return nil
@@ -150,5 +119,8 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file that defines the type of content")
 	rootCmd.MarkFlagRequired("config")
 
+	rootCmd.PersistentFlags().BoolVarP(&logger.LoggingEnabled, "enable-logging", "l", false, "enable logging")
 	rootCmd.PersistentFlags().BoolVarP(&isRemoteRepo, "remote", "r", false, "if the repo-path is an HTTP URL")
+
+	logger.InitLogger()
 }

@@ -3,7 +3,6 @@ package linter
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -56,8 +55,6 @@ func (condition *RefExistsCondition) Validate() *ConditionResult {
 			// NOTE: The second submatch(1st matching group) is always used to get the path
 			// condition.Path is always a file so need to get the directory, before adding relative path
 			pathToCheck := filepath.Join(condition.Path, "..", subMatch[1])
-
-			fmt.Println(pathToCheck)
 
 			if _, err := os.Stat(pathToCheck); err != nil {
 				ret.IsSuccess = false
