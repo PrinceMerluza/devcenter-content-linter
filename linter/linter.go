@@ -130,14 +130,16 @@ func validateRule(rule *config.Rule, ruleId string, contentPath string) *RuleRes
 		Description: rule.Description,
 	}
 
-	var filePath *string
+	targetPath := ""
 	if rule.File != nil {
 		tmpPath := path.Join(contentPath, *rule.File)
-		filePath = &tmpPath
+		targetPath = tmpPath
+	} else {
+		targetPath = contentPath
 	}
 
 	for _, condition := range *rule.Conditions {
-		condResult := validateCondition(&condition, filePath)
+		condResult := validateCondition(&condition, targetPath)
 		if condResult == nil {
 			ret.Error = &ValidationError{
 				RuleId: ruleId,
@@ -166,21 +168,21 @@ func validateRule(rule *config.Rule, ruleId string, contentPath string) *RuleRes
 }
 
 // Evaluate the condition. Any failure in any type of condition will short circuit the evaluation.
-func validateCondition(condition *config.Condition, filePath *string) *ConditionResult {
+func validateCondition(condition *config.Condition, targetPath string) *ConditionResult {
 	var ret *ConditionResult
 	var validator Validator
 
 	// PathExists Condition
 	if condition.PathExists != nil {
 		validator = &PathExistsCondition{
-			Path: *condition.PathExists,
+			Path: path.Join(targetPath, *condition.PathExists),
 		}
 	}
 
 	// Contains Conditions
 	if condition.Contains != nil {
 		validator = &ContainsCondition{
-			Path:        *filePath,
+			Path:        targetPath,
 			ContainsArr: condition.Contains,
 		}
 	}
@@ -188,7 +190,7 @@ func validateCondition(condition *config.Condition, filePath *string) *Condition
 	// Not Contains Condition
 	if condition.NotContains != nil {
 		validator = &NotContainsCondition{
-			Path:        *filePath,
+			Path:        targetPath,
 			NotContains: condition.NotContains,
 		}
 	}
@@ -196,7 +198,7 @@ func validateCondition(condition *config.Condition, filePath *string) *Condition
 	// Check reference Exist Condition
 	if condition.CheckReferenceExist != nil {
 		validator = &RefExistsCondition{
-			Path:              *filePath,
+			Path:              targetPath,
 			ReferencePatterns: condition.CheckReferenceExist,
 		}
 	}

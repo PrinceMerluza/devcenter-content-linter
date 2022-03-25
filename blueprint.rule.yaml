@@ -142,13 +142,13 @@ ruleGroups:
       file: "./README.md"
       conditions:
       - checkReferenceExist:
-        - "!\\[.*\\]\\((.*)\\).*"
+        - (?U)!\[.*\]\((.*)( *".*")?\).*
       level: error
     - description: Image links in index.md file should point to a valid image file.
       file: "./blueprint/index.md"
       conditions:
       - checkReferenceExist:
-        - "!\\[.*\\]\\((.*)\\).*"
+        - (?U)!\[.*\]\((.*)( *".*")?\).*
       level: error
     - description: Image links in the README.md file is missing alternative text.
       file: "./README.md"

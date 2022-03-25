@@ -38,7 +38,17 @@ func GetWorkingPath() string {
 	return workingPath
 }
 
-// Depending on if the repo is local or remote, rebuild the path/URL to point to a relative path
+// Just get the relative path from repository root
+func GetRelPath(localPath string) string {
+	relPath, err := filepath.Rel(workingPath, localPath)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	return relPath
+}
+
+// Depending on if the repo is local or remote, rebuild the path/URL
 func GetOriginalRelPath(localPath string) string {
 	if remoteUrl == "" {
 		return localPath
@@ -60,6 +70,7 @@ func GetOriginalRelPath(localPath string) string {
 	return s
 }
 
+// Clone the repository to a temp folder OS temporary directory
 func cloneRepoTemp(repoUrl string) (string, error) {
 	tmpPath, err := os.MkdirTemp("", "gc-content")
 	if err != nil {

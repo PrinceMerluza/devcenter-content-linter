@@ -8,6 +8,7 @@ import (
 
 	"github.com/PrinceMerluza/devcenter-content-linter/blueprintrepo"
 	"github.com/PrinceMerluza/devcenter-content-linter/config"
+	"github.com/PrinceMerluza/devcenter-content-linter/logger"
 	"github.com/PrinceMerluza/devcenter-content-linter/utils"
 )
 
@@ -22,6 +23,7 @@ func (condition *ContainsCondition) Validate() *ConditionResult {
 		IsSuccess:      true,
 	}
 
+	logger.Tracef("Opening file %s \n", condition.Path)
 	fileData, err := os.ReadFile(condition.Path)
 	if err != nil {
 		ret.Error = err
@@ -57,7 +59,7 @@ func (condition *ContainsCondition) Validate() *ConditionResult {
 			}
 
 			*ret.FileHighlights = append(*ret.FileHighlights, FileHighlight{
-				Path:        blueprintrepo.GetOriginalRelPath(condition.Path),
+				Path:        blueprintrepo.GetRelPath(condition.Path),
 				LineNumber:  lineNumber,
 				LineContent: strings.TrimSpace(lineContent),
 				LineCount:   1,
@@ -81,7 +83,7 @@ func (condition *ContainsCondition) Validate() *ConditionResult {
 			lineCount := strings.Count(dataString[loc[0]:loc[1]], "\n") + 1
 
 			*ret.FileHighlights = append(*ret.FileHighlights, FileHighlight{
-				Path:        blueprintrepo.GetOriginalRelPath(condition.Path),
+				Path:        blueprintrepo.GetRelPath(condition.Path),
 				LineNumber:  lineIndex,
 				LineContent: strings.TrimSpace(match),
 				LineCount:   lineCount,

@@ -33,7 +33,7 @@ func TestRefExistsCondition_Validate(t *testing.T) {
 				IsSuccess: true,
 				FileHighlights: &[]FileHighlight{
 					{
-						Path:        refExists,
+						Path:        relPath(refExists),
 						LineNumber:  6,
 						LineCount:   1,
 						LineContent: "![Image](yuri.png)",
@@ -51,7 +51,7 @@ func TestRefExistsCondition_Validate(t *testing.T) {
 				IsSuccess: false,
 				FileHighlights: &[]FileHighlight{
 					{
-						Path:        refExists2,
+						Path:        relPath(refExists2),
 						LineNumber:  6,
 						LineCount:   1,
 						LineContent: "![Image](yuri2.png)",

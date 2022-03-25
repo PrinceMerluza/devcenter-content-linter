@@ -45,7 +45,7 @@ func TestContainsCondition_Validate(t *testing.T) {
 				IsSuccess: true,
 				FileHighlights: &[]FileHighlight{
 					{
-						Path:        containsFile,
+						Path:        relPath(containsFile),
 						LineNumber:  3,
 						LineCount:   1,
 						LineContent: "Laboris ea elit voluptate WALDO ullamco esse in fugiat ullamco",
@@ -72,13 +72,13 @@ func TestContainsCondition_Validate(t *testing.T) {
 				IsSuccess: true,
 				FileHighlights: &[]FileHighlight{
 					{
-						Path:        containsFile,
+						Path:        relPath(containsFile),
 						LineNumber:  3,
 						LineCount:   1,
 						LineContent: "Laboris ea elit voluptate WALDO ullamco esse in fugiat ullamco",
 					},
 					{
-						Path:        containsFile,
+						Path:        relPath(containsFile),
 						LineNumber:  7,
 						LineCount:   1,
 						LineContent: "## something random text random",

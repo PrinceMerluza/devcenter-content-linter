@@ -8,6 +8,7 @@ import (
 	"regexp"
 
 	"github.com/PrinceMerluza/devcenter-content-linter/blueprintrepo"
+	"github.com/PrinceMerluza/devcenter-content-linter/logger"
 )
 
 type RefExistsCondition struct {
@@ -59,11 +60,12 @@ func (condition *RefExistsCondition) Validate() *ConditionResult {
 			pathToCheck := filepath.Join(condition.Path, "..", subMatch[1])
 
 			if _, err := os.Stat(pathToCheck); err != nil {
+				logger.Tracef("%s does not exist \n", pathToCheck)
 				ret.IsSuccess = false
 			}
 
 			*ret.FileHighlights = append(*ret.FileHighlights, FileHighlight{
-				Path:        blueprintrepo.GetOriginalRelPath(condition.Path),
+				Path:        blueprintrepo.GetRelPath(condition.Path),
 				LineNumber:  lineNumber,
 				LineContent: lineString,
 				LineCount:   1,

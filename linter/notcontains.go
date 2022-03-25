@@ -52,7 +52,7 @@ func (condition *NotContainsCondition) Validate() *ConditionResult {
 			if matched {
 				ret.IsSuccess = false
 				*ret.FileHighlights = append(*ret.FileHighlights, FileHighlight{
-					Path:        blueprintrepo.GetOriginalRelPath(condition.Path),
+					Path:        blueprintrepo.GetRelPath(condition.Path),
 					LineNumber:  lineNumber,
 					LineContent: lineString,
 					LineCount:   1,

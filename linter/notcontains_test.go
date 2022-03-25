@@ -34,7 +34,7 @@ func TestNotContainsCondition_Validate(t *testing.T) {
 				IsSuccess: false,
 				FileHighlights: &[]FileHighlight{
 					{
-						Path:        notContainsFile,
+						Path:        relPath(notContainsFile),
 						LineNumber:  5,
 						LineCount:   1,
 						LineContent: "bbbbb [Link Example](b/b)",
